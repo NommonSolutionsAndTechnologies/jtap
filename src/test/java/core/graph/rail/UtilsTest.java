@@ -20,11 +20,11 @@ class UtilsTest {
 
 	@Test
 	void insertRailGTFSintoNeo4JTest() throws Exception {
-		Config config = Config.of(new File("/home/stefanopenazzi/projects/jtap/config_.xml")); 
+		Config config = Config.of(new File("C:\\Users\\jbueno\\Desktop\\jtap\\config_.xml")); 
 		Controller controller = new Controller(config);
 		controller.run();
 		controller.emptyTempDirectory();
-		String db = "france2";
+		String db = "hellojtap";
 		
 		//insert GTFS
 		GTFS gtfs = controller.getInjector().getInstance(GTFS.class);

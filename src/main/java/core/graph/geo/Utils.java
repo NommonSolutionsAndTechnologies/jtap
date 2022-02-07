@@ -8,6 +8,7 @@ import org.neo4j.driver.AccessMode;
 
 import config.Config;
 import core.graph.NodeGeoI;
+import core.graph.NodeI;
 import core.graph.annotations.GraphElementAnnotation.Neo4JNodeElement;
 import core.graph.rail.gtfs.GTFS;
 import data.external.neo4j.Neo4jConnection;
@@ -18,7 +19,7 @@ public class Utils {
 	public static <T extends City> void insertCitiesIntoNeo4JFromCsv(String database,Config config,Class<T> cityClass) throws Exception {
 		core.graph.Utils.insertNodesIntoNeo4J(database,config.getGeoLocConfig().getCitiesFile(),config.getGeneralConfig().getTempDirectory(),cityClass);
 		try( Neo4jConnection conn = new Neo4jConnection()){  
-			conn.query(database,"CREATE INDEX CityNodeIndex FOR (n:CityNode) ON (n.city)",AccessMode.WRITE);
+			conn.query(database,"CREATE INDEX CityNodeIndex IF NOT EXISTS FOR (n:CityNode) ON (n.city)",AccessMode.WRITE);
 		}
 	}
 	

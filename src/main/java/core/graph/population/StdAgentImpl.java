@@ -27,8 +27,8 @@ public class StdAgentImpl implements NodeI {
 	private Integer hAge;
 	
 	@CsvBindByName(column = "gender")
-	@Neo4JPropertyElement(key="gender",type=Neo4JType.TOBOOLEAN)
-	private Boolean gender;
+	@Neo4JPropertyElement(key="gender",type=Neo4JType.TOSTRING)
+	private String gender;
 	
 	@CsvBindByName(column = "l_income")
 	@Neo4JPropertyElement(key="l_income",type=Neo4JType.TOFLOAT)
@@ -58,7 +58,7 @@ public class StdAgentImpl implements NodeI {
 		return this.hAge;
 	}
 	
-	public Boolean getGender() {
+	public String getGender() {
 		return this.gender;
 	}
 	

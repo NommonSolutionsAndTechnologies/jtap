@@ -37,7 +37,7 @@ public final class Utils {
 		data.external.neo4j.Utils.insertLinks(database,tempDirectory,getRailTransferLinks(gtfs)
 				,RailLink.class,core.graph.rail.gtfs.Stop.class,"id","stop_from",core.graph.rail.gtfs.Stop.class,"id","stop_to");
 		try( Neo4jConnection conn = new Neo4jConnection()){  
-			conn.query(database,"CREATE INDEX RailNodeIndex FOR (n:RailNode) ON (n.id)",AccessMode.WRITE);
+			conn.query(database,"CREATE INDEX RailNodeIndex IF NOT EXISTS FOR (n:RailNode) ON (n.id)",AccessMode.WRITE);
 		}
 	}
 	
@@ -76,7 +76,7 @@ public final class Utils {
 		List<Connection> connections = new ArrayList<>();
 		List<StopTime> stopTime = gtfs.getStopTimes();
 		Map<String, List<StopTime>> tripStops = stopTime.stream()
-				 .filter(x -> x.getTripId().contains("2021-07-18"))
+				 .filter(x -> x.getTripId().contains("2021-11-23"))
 				 .sorted(Comparator.comparing(StopTime::getDepartureTime))
 				 .collect(Collectors.groupingBy(StopTime::getTripId));
 		for (var entry : tripStops.entrySet()) {
