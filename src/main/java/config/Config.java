@@ -23,10 +23,16 @@ public final class Config {
 	private RoutingConfig routingConfig;
 	private ActivitiesConfig activitiesConfig;
 	private CtapModelConfig ctapModelConfig;
+	private AirConfig airConfig;
 	
 	@XmlElement(name = "railConfig")
 	public RailConfig getRailConfig() {
 		return this.railConfig;
+	}
+	
+	@XmlElement(name = "airConfig")
+	public AirConfig getAirConfig() {
+		return this.airConfig;
 	}
 	
 	@XmlElement(name = "generalConfig")
@@ -67,6 +73,9 @@ public final class Config {
 	public void setRailConfig(RailConfig railConfig) {
 		this.railConfig = railConfig;
 	}
+	public void setAirConfig(AirConfig airConfig) {
+		this.airConfig = airConfig;
+	}
 	public void setGeneralConfig(GeneralConfig generalConfig) {
 		this.generalConfig = generalConfig;
 	}
@@ -92,10 +101,12 @@ public final class Config {
 	@Inject
 	public Config() {}
 	
-	public Config(RailConfig railConfig,GeneralConfig generalConfig,GeoLocConfig geoLocConfig,
-			PopulationConfig populationConfig,Neo4JConfig neo4JConfig,RoutingConfig routingConfig,
-			ActivitiesConfig activitiesConfig,CtapModelConfig ctapModelConfig) {
+	public Config(RailConfig railConfig,AirConfig airConfig,GeneralConfig generalConfig,
+			GeoLocConfig geoLocConfig,PopulationConfig populationConfig,Neo4JConfig neo4JConfig,
+			RoutingConfig routingConfig,ActivitiesConfig activitiesConfig,
+			CtapModelConfig ctapModelConfig) {
 		this.railConfig = railConfig;
+		this.airConfig = airConfig;
 		this.generalConfig = generalConfig;
 		this.geoLocConfig = geoLocConfig;
 		this.populationConfig = populationConfig;

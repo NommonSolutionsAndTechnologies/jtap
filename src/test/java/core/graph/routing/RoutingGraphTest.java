@@ -34,7 +34,7 @@ class RoutingGraphTest {
 		
 		
 		RoutingGraph rg = new RoutingGraph("train-intersections-graph-2",nodes,links,"avg_travel_time");
-		rg.graphCaching("france2");
+		rg.graphCaching("spainmodel");
 	}
 
 }
