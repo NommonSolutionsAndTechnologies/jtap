@@ -20,6 +20,12 @@ public final class Config {
 	private Neo4JConfig neo4JConfig;
 	private CtapModelConfig ctapModelConfig;
 	private DbScenarioConfig dbScenarioConfig;
+
+	
+	@XmlElement(name = "airConfig")
+	public AirConfig getAirConfig() {
+		return this.airConfig;
+	}
 	
 	@XmlElement(name = "generalConfig")
 	public GeneralConfig getGeneralConfig() {
@@ -40,7 +46,7 @@ public final class Config {
 	public DbScenarioConfig getDbScenarioConfig() {
 		return dbScenarioConfig;
 	}
-	
+
 	public void setGeneralConfig(GeneralConfig generalConfig) {
 		this.generalConfig = generalConfig;
 	}
@@ -61,6 +67,7 @@ public final class Config {
 	public Config(GeneralConfig generalConfig,Neo4JConfig neo4JConfig,
 			CtapModelConfig ctapModelConfig,DbScenarioConfig dbScenarioConfig) {
 	
+
 		this.generalConfig = generalConfig;
 		this.neo4JConfig = neo4JConfig;
 		this.ctapModelConfig = ctapModelConfig;

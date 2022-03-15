@@ -48,47 +48,57 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		controller.run();
 		controller.emptyTempDirectory();
 		
+		System.out.print("Road \n");
 		//Road------------------------------------------------------------------
 		core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
 		
+		System.out.print("GTFS \n");
 		//insert GTFS-----------------------------------------------------------
 		GTFS gtfs = controller.getInjector().getInstance(GTFS.class);
 		core.graph.rail.Utils.deleteRailGTFS();
-		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2021-07-18");
+		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2019-10-06");
 		
-		
+		System.out.print("Cities \n");
 		//insert cities---------------------------------------------------------
 		core.graph.geo.Utils.insertCitiesIntoNeo4JFromCsv(CityNode.class);
 		
+		System.out.print("Facilities 1 \n");
 		//create FacilityNodes from osm-----------------------------------------
 		core.graph.facility.osm.Utils.facilitiesIntoNeo4j(config);
 		
+		System.out.print("Facilities 2 \n");
 		//connect FacilityNodes with Cities-------------------------------------
 		Map<Class<? extends NodeGeoI>,String> facilityConnMap = new HashMap<>();
 		facilityConnMap.put(CityNode.class,"city_id");
 		core.graph.Utils.setShortestDistCrossLink(FacilityNode.class,"node_osm_id",facilityConnMap,3);
 		
+		System.out.print("Facilities 3 \n");
 		//create the CityFacStatNodes-------------------------------------------
 		core.graph.geo.Utils.addCityFacStatNode();
 		
+		System.out.print("Connections 1 \n");
 		//Connections between RoadNetwork and RailNetwork-----------------------
 		Map<Class<? extends NodeGeoI>,String> railConnMap = new HashMap<>();
 		railConnMap.put(RoadNode.class,"node_osm_id");
 		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"id",railConnMap,2);
 		
+		System.out.print("Connections 2 \n");
 		//Connections between Cities and RoadNetwork/RailNetwork----------------
 		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
 		cityConnMap.put(RoadNode.class,"node_osm_id");
 		cityConnMap.put(RailNode.class, "id");
 		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
 		
+		System.out.print("Activities \n");
 		//insert activities-----------------------------------------------------
 		core.graph.Activity.Utils.insertActivitiesFromCsv(ActivityNode.class);
 		core.graph.Activity.Utils.insertActivitiesLocFromCsv(ActivityCityLink.class);
 		
+		System.out.print("Population \n");
 		//insert population-----------------------------------------------------
 		core.graph.population.Utils.insertStdPopulationFromCsv(StdAgentNodeImpl.class);
 		
+		System.out.print("Attractiveness \n");
 		//insert attractiveness-------------------------------------------------
 		projects.CTAP.attractiveness.normalized.Utils.insertAttractivenessNormalizedIntoNeo4j();
 		
