@@ -1,4 +1,6 @@
-package core.models.ctap;
+package projects.CTAP.model;
+
+import java.util.Arrays;
 
 import core.models.ObjectiveFunctionI;
 
@@ -8,31 +10,35 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	private final int nActivities;
 	private final int[] activitiesSequence;
 	private final int[] locations;
-	private final double[] percentageOfTimeTargetActivity;
-	private final double[] durationTargetActivity;
+	private final double[] percentageOfTimeTarget;
+	private final double[] timeDuration;
 	private final double[] locationPerception;
 	private final double[] sigmaActivityCalibration;
 	private final double[] tauActivityCalibration;
-	private final double[] gammaActivityCalibration;
+	private final double[] durationDiscomfort;
 	private final double[] travelCost;
 	private final double[] travelTime;
+	private final float[][] attractiveness;
 	
 	private final double monetaryBudget;
 	private final double timeRelatedBudget;
+	private final double valueOfTime;
 	
 	
 	
-	public ObjectiveFunctionCTAP( int nActivities,
+	public ObjectiveFunctionCTAP(int nActivities,
 			                     int[] activitiesSequence,
 								 int[] locations,
-								 double[] percentageOfTimeTargetActivity,
-								 double[] durationTargetActivity,
+								 double[] percentageOfTimeTarget,
+								 double[] timeDuration,
 								 double[] locationPerception,
 								 double[] sigmaActivityCalibration,
 								 double[] tauActivityCalibration,
-								 double[] gammaActivityCalibration,
+								 double[] durationDiscomfort,
 								 double[] travelCost,
 								 double[] travelTime,
+								 float[][] attractiveness,
+								 double valueOfTime,
 								 double monetaryBudget,
 								 double timeRelatedBudget
 								 ) {
@@ -40,16 +46,18 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 		 this.nActivities = nActivities;
 		 this.activitiesSequence = activitiesSequence;
 		 this.locations = locations;
-		 this.percentageOfTimeTargetActivity = percentageOfTimeTargetActivity;
-		 this.durationTargetActivity = durationTargetActivity;
+		 this.percentageOfTimeTarget = percentageOfTimeTarget;
+		 this.timeDuration = timeDuration;
 		 this.locationPerception = locationPerception;
 		 this.sigmaActivityCalibration = sigmaActivityCalibration;
 		 this.tauActivityCalibration = tauActivityCalibration;
-		 this.gammaActivityCalibration = gammaActivityCalibration;
+		 this.durationDiscomfort = durationDiscomfort;
 		 this.travelCost = travelCost;
 		 this.travelTime = travelTime;
 		 this.monetaryBudget = monetaryBudget;
 		 this.timeRelatedBudget = timeRelatedBudget;
+		 this.attractiveness = attractiveness ;
+		 this.valueOfTime = valueOfTime;
 	}
 	
 	public double getValue(double[] ts, double[] te) {
@@ -60,11 +68,19 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 		return res;
 	}
 	
+	@Override
+	public double getValue(double[] t) {
+		double[] ts = Arrays.copyOfRange(t,0,t.length/2);
+		double[] te = Arrays.copyOfRange(t,t.length/2,t.length);
+		return getValue(ts,te); 
+		
+	}
+	
 	
 	private double getDiscomfortPercentageOfTimeTarget(double[] ts, double[] te) {
 		double res = 0;
 		for(int i = 0;i<nActivities;i++) {
-			res += Math.pow(percentageOfTimeTargetActivity[i] - getStateValue(i,ts,te),2);
+			res += Math.pow(percentageOfTimeTarget[i] - getStateValue(i,ts,te),2);
 		}
 		return res;
 	}
@@ -72,8 +88,8 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	private double getDiscomfortDurationTarget(double[] ts, double[] te) {
 		double res = 0;
 		for(int i = 0;i<activitiesSequence.length;i++) {
-			res += Math.pow(durationTargetActivity[activitiesSequence[i]] - (te[i]-ts[i]),2);
-			res = res*this.gammaActivityCalibration[i];
+			res += Math.pow(timeDuration[activitiesSequence[i]] - (te[i]-ts[i]),2);
+			res = res*this.durationDiscomfort[i];
 		}
 		return res;
 	}
@@ -117,5 +133,10 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 			}
 		}
 		return 0;
+	}
+
+	@Override
+	public int getVariablesLength() {
+		return this.nActivities*2;
 	}
 }

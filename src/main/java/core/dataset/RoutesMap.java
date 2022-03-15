@@ -27,7 +27,9 @@ import core.graph.routing.RoutingManager;
 
 public class RoutesMap implements DatasetMapI {
 	
-	private Map<String,Map<String,Map<String,Double>>> map  = new ConcurrentHashMap<>();
+	private Long projectionsCount = 0L;
+	private Map<String,Long> projectionsMap = new HashMap<>();
+	private Map<Long,Map<Long,Map<Long,Double>>> map  = new ConcurrentHashMap<>();
 	private List<RoutingGraph> projections = new ArrayList<>();
 	private RoutingManager rm;
 	private Config config;
@@ -41,14 +43,18 @@ public class RoutesMap implements DatasetMapI {
 	
 	public void addProjection(RoutingGraph projection) throws Exception {
 		this.rm.addNewRoutingGraph(projection);
-		map.put(projection.getId(), new ConcurrentHashMap<>());
+		projectionsMap.put(projection.getId(), projectionsCount);
+		map.put(projectionsCount, new ConcurrentHashMap<>());
 	    this.projections.add(projection);
+	    projectionsCount++;
 	}
 	
 	public void addProjections(List<RoutingGraph> projections_) throws Exception {
 		for (RoutingGraph rg: projections_) {
 			this.rm.addNewRoutingGraph(rg);
-			map.put(rg.getId(), new ConcurrentHashMap<>());
+			projectionsMap.put(rg.getId(), projectionsCount);
+			map.put(projectionsCount, new ConcurrentHashMap<>());
+			projectionsCount++;
 		}
 		this.projections.addAll(projections_);
 	}
@@ -66,27 +72,27 @@ public class RoutesMap implements DatasetMapI {
      */
     public void addSourceRoutesFromNeo4j(List<SourceRoutesRequest> srr ) throws Exception {
     	for(@SuppressWarnings("rawtypes") SourceRoutesRequest req: srr) {
-    		Map<String,Double> res = rm.getSSSP_AsMap(req.getRg(),
-    				req.getSource(),
-    				req.getSourcePropertyKey(),
-    				req.getSourcePropertyValue(),
-    				req.targetPropertyKey,
+    		Map<Long,Double> res = rm.getSSSP_AsMap(req.getRg(),
+    				req.getSourceType(),
+    				"city_id",
+    				req.getSourceId(),
+    				"city_id",
     				req.getWeightProperty());
     		//filter the targets
-    		if(req.getTargets() != null) {
-    			List<String> ls = (List<String>)req.getTargets();
+    		if(req.getTargetsIds() != null) {
+    			List<Long> ls = (List<Long>)req.getTargetsIds();
     			res.keySet().retainAll(ls);
     		}
-    		Map<String,Map<String,Double>> m = map.get(req.getRg());
-    		if(m.containsKey(req.getSourcePropertyValue())) {
-    			Map<String, Double> map3 = Stream.of(res, m.get(req.getSourcePropertyValue()))
+    		Map<Long,Map<Long,Double>> m = map.get(projectionsMap.get(req.getRg()));
+    		if(m.containsKey(req.getSourceId())) {
+    			Map<Long, Double> map3 = Stream.of(res, m.get(req.getSourceId()))
     					  .flatMap(map -> map.entrySet().stream())
     					  .collect(Collectors.toConcurrentMap(
     					    Map.Entry::getKey,
     					    Map.Entry::getValue));
     		}
     		else {
-    			m.put(req.getSourcePropertyValue(),res);
+    			m.put(req.getSourceId(),res);
     		}
     	}
 	}
@@ -94,35 +100,7 @@ public class RoutesMap implements DatasetMapI {
     public void addNewRoutesFromCSV() {
 		
 	}
-    public void addNewRoutesFromJson() throws IOException {
-    	ObjectMapper mapper = new ObjectMapper();
-    	FileInputStream inputStream = new FileInputStream(config.getRoutingConfig().getJsonFile());
-    	try {
-    	    String json = IOUtils.toString(inputStream);
-    	    this.map = mapper.readValue(json, Map.class);
-    	} finally {
-    	    inputStream.close();
-    	}
-   	}
     
-    public void saveCSV() {
-    	String eol = System.getProperty("line.separator");
-    	try (Writer writer = new FileWriter(config.getGeneralConfig().getOutputDirectory()+"RoutesMap.csv")) {
-    	  for (Map.Entry<String,Map<String,Map<String,Double>>> entry : this.map.entrySet()) {
-    	    for (Map.Entry<String,Map<String,Double>> entry_1 : entry.getValue().entrySet()) {
-    	    	for (Map.Entry<String,Double> entry_2 : entry_1.getValue().entrySet()) {
-    	    		 writer.append(entry.getKey()).append(',');
-    	    		 writer.append(entry_1.getKey()).append(',');
-        	    	 writer.append(entry_2.getKey()).append(',');
-        	    	 writer.append(entry_2.getValue().toString())
-        	    	 .append(eol);
-    	    	}
-    	    }
-    	  }
-    	} catch (IOException ex) {
-    	  ex.printStackTrace(System.err);
-    	}
-    }
     
     public void saveJson() {
     	ObjectMapper mapper = new ObjectMapper();
@@ -134,9 +112,30 @@ public class RoutesMap implements DatasetMapI {
     }
     
     public void close() throws Exception {
-    	this.rm.close();
+    	//this.rm.close();
+    }
+    
+    public double[][][] toArray(List<List<Long>> parameterDescription){
+    	
+    	int d1 = parameterDescription.get(0).size();
+    	int d2 = parameterDescription.get(1).size();
+    	int d3 = parameterDescription.get(2).size();
+    	
+    	double[][][] res = new double[d1][d2][d3];
+    	for(int i =0;i < d1;i++) {
+    		for(int j = 0;j < d2;j++) {
+    			for(int k = 0;k < d3;k++) {
+    				res[i][j][k] = map.get(parameterDescription.get(0).get(i))
+    						.get(parameterDescription.get(1).get(j))
+    						.get(parameterDescription.get(2).get(k));
+    			}
+    		}
+    	}
+    	return res;
     }
 	
+    
+    //TODO switch to LONG
     class SourceTargetRouteRequest<T extends NodeGeoI,K extends NodeGeoI>{
     	String rg;
     	T source;
@@ -205,12 +204,10 @@ public class RoutesMap implements DatasetMapI {
      */
     public class SourceRoutesRequest<T extends NodeGeoI>{
     	private final String rg;
-    	private final T source;
-    	private final String sourcePropertyKey;
-    	private final String sourcePropertyValue;
-    	private final String targetPropertyKey;
+    	private final T sourceType;
+    	private final Long sourceId;
     	private final String weightProperty;
-    	private final List<String> targets;
+    	private final List<Long> targetsIds;
     	/**
     	 * @param rg
     	 * @param source
@@ -220,39 +217,31 @@ public class RoutesMap implements DatasetMapI {
     	 * @param weightProperty
     	 * @param targets            if this is null all the targets are considered
     	 */
-    	public SourceRoutesRequest(String rg, T source, String startPropertyKey, String startPropertyValue,
-   			 String endPropertyKey, String weightProperty,List<String> targets) {
+    	public SourceRoutesRequest(String rg, T sourceType, Long sourceId,
+    			String weightProperty,List<Long> targetsIds) {
     		
     		this.rg = rg;
-    		this.source = source;
-    		this.sourcePropertyKey = startPropertyKey;
-    		this.sourcePropertyValue = startPropertyValue;
-    		this.targetPropertyKey = endPropertyKey;
+    		this.sourceType = sourceType;
+    		this.sourceId = sourceId;
     		this.weightProperty = weightProperty;
-    		this.targets = targets;
+    		this.targetsIds = targetsIds;
     		
     	}
     	
     	public String getRg() {
     		return this.rg;
     	}
-    	public T getSource() {
-    		return this.source;
+    	public T getSourceType() {
+    		return this.sourceType;
     	}
-    	public String getSourcePropertyKey() {
-    		return this.sourcePropertyKey;
-    	}
-    	public String getSourcePropertyValue() {
-    		return this.sourcePropertyValue;
-    	}
-    	public String getTargetPropertyKey() {
-    		return this.targetPropertyKey;
+    	public Long getSourceId() {
+    		return this.sourceId;
     	}
     	public String getWeightProperty() {
     		return this.weightProperty;
     	}
-    	public List<String> getTargets(){
-    		return this.targets;
+    	public List<Long> getTargetsIds(){
+    		return this.targetsIds;
     	}
     	
     }

@@ -1,37 +1,23 @@
 package projects.CTAP.pipelines;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import config.Config;
 import controller.Controller;
-import core.dataset.Dataset;
-import core.dataset.DatasetI;
-import core.dataset.RoutesMap;
-import core.dataset.RoutesMap.SourceRoutesRequest;
-import core.graph.LinkI;
 import core.graph.NodeGeoI;
 import core.graph.Activity.ActivityNode;
-import core.graph.cross.CrossLink;
 import core.graph.facility.osm.FacilityNode;
 import core.graph.geo.CityNode;
 import core.graph.population.StdAgentNodeImpl;
-import core.graph.rail.RailLink;
 import core.graph.rail.gtfs.GTFS;
 import core.graph.rail.gtfs.RailNode;
-import core.graph.road.osm.RoadLink;
 import core.graph.road.osm.RoadNode;
-import core.graph.routing.RoutingGraph;
 import picocli.CommandLine;
-import projects.CTAP.dataset.RoutesMapCTAP;
+import projects.CTAP.graphElements.ActivityCityLink;
 
 public class ScenarioBuildingPipeline implements Callable<Integer> {
 	
@@ -83,7 +69,7 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		System.out.print("Facilities 2 \n");
 		//connect FacilityNodes with Cities-------------------------------------
 		Map<Class<? extends NodeGeoI>,String> facilityConnMap = new HashMap<>();
-		facilityConnMap.put(CityNode.class,"city");
+		facilityConnMap.put(CityNode.class,"city_id");
 		core.graph.Utils.setShortestDistCrossLink(FacilityNode.class,"node_osm_id",facilityConnMap,3);
 		
 		System.out.print("Facilities 3 \n");
@@ -101,11 +87,12 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
 		cityConnMap.put(RoadNode.class,"node_osm_id");
 		cityConnMap.put(RailNode.class, "id");
-		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city",cityConnMap,3);
+		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
 		
 		System.out.print("Activities \n");
 		//insert activities-----------------------------------------------------
 		core.graph.Activity.Utils.insertActivitiesFromCsv(ActivityNode.class);
+		core.graph.Activity.Utils.insertActivitiesLocFromCsv(ActivityCityLink.class);
 		
 		System.out.print("Population \n");
 		//insert population-----------------------------------------------------
@@ -115,36 +102,6 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		//insert attractiveness-------------------------------------------------
 		projects.CTAP.attractiveness.normalized.Utils.insertAttractivenessNormalizedIntoNeo4j();
 		
-		System.out.print("OD matrix \n");
-		//OD MATRIX-------------------------------------------------------------
-		saveODMatrix();
-		
-		System.out.print("Finish");
 		return 1;
 	}
-	
-	public static void saveODMatrix() throws Exception {
-		List<Class<? extends NodeGeoI>> nodes = new ArrayList<>();
-		List<Class<? extends LinkI>> links = new ArrayList<>();
-		nodes.add(CityNode.class);
-		nodes.add(RoadNode.class);
-		nodes.add(RailNode.class);
-		links.add(CrossLink.class);
-		links.add(RoadLink.class);
-		links.add(RailLink.class);
-		RoutingGraph rg = new RoutingGraph("rail-road-graph",nodes,links,"avg_travel_time");
-		List<RoutingGraph> rgs = new ArrayList<RoutingGraph>();
-		rgs.add(rg);
-		Dataset dsi = (Dataset) Controller.getInjector().getInstance(DatasetI.class);
-		RoutesMapCTAP rm = (RoutesMapCTAP) dsi.getMap(RoutesMap.ROUTES_MAP_KEY);
-		rm.addProjections(rgs);
-		List<SourceRoutesRequest> res = projects.CTAP.geolocClusters.Utils.getSRR_cluster1(rm,
-				"rail-road-graph",
-				Controller.getConfig().getCtapModelConfig().getPopulationThreshold());
-		res = res.stream().skip(60).limit(3).collect(Collectors.toList());
-		rm.addSourceRoutesFromNeo4j(res);
-		rm.saveJson();
-		rm.close();
-	}
-	
 }

@@ -1,136 +1,80 @@
 package core.dataset;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import org.junit.jupiter.api.Test;
+import config.Config;
+import controller.Controller;
+import core.graph.Activity.ActivityNode;
+import core.graph.geo.CityNode;
+import core.graph.population.StdAgentNodeImpl;
+import core.graph.routing.RoutingManager;
+import projects.CTAP.dataset.AgentActivityParameterFactory;
+import projects.CTAP.dataset.AgentParametersFactory;
+import projects.CTAP.dataset.AttractivenessParameterFactory;
+import projects.CTAP.dataset.Ds2DsTravelCostDbParameterFactory;
+import projects.CTAP.dataset.Ds2OsTravelCostDbParameterFactory;
+import projects.CTAP.dataset.Os2DsTravelCostParameter;
+import projects.CTAP.dataset.Os2DsTravelCostDbParameterFactory;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.Test;
-
-import config.Config;
-import controller.Controller;
-import core.dataset.RoutesMap.SourceRoutesRequest;
-import core.graph.LinkI;
-import core.graph.NodeGeoI;
-import core.graph.cross.CrossLink;
-import core.graph.geo.CityNode;
-import core.graph.population.StdAgentNodeImpl;
-import core.graph.rail.RailLink;
-import core.graph.rail.gtfs.RailNode;
-import core.graph.road.osm.RoadLink;
-import core.graph.road.osm.RoadNode;
-import core.graph.routing.RoutingGraph;
-import projects.CTAP.dataset.RoutesMapCTAP;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 class datasetTest {
+	
+	@Test
+	void totTest() throws Exception {
+		
+		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
+		Controller controller = new Controller(config);
+		controller.run();
+		controller.emptyTempDirectory();
+		
+		RoutingManager rm = controller.getInjector().getInstance(RoutingManager.class);
+		
+		//indexes
+		List<Long> agents_ids = data.external.neo4j.Utils.importNodes(StdAgentNodeImpl.class).stream().map(x -> x.getId()).collect(Collectors.toList());
+		List<Long> activities_ids = data.external.neo4j.Utils.importNodes(ActivityNode.class).stream().map(x -> x.getActivityId()).collect(Collectors.toList());
+		List<CityNode> cities = data.external.neo4j.Utils.importNodes(config.getNeo4JConfig().getDatabase(),CityNode.class);
+		Integer popThreshold = Controller.getConfig().getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsPopThreshold();
+		List<Long> citiesDs_ids = cities.stream().filter(e -> e.getPopulation() >= popThreshold).limit(2).map(CityNode::getId).collect(Collectors.toList());
+		List<Long> citiesOs_ids = cities.stream().filter(e -> e.getPopulation() < popThreshold).limit(2).map(CityNode::getId).collect(Collectors.toList());
+		Integer initialTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getInitialTime();
+		Integer finalTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getFinalTime();
+		Integer intervalTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getIntervalTime();
+		List<Long> time = LongStream.iterate(initialTime,i->i+intervalTime).limit(Math.round(finalTime/intervalTime)).boxed().collect(Collectors.toList());
+		
+		//factories
+		List<? extends ParameterFactoryI> agentActivtyParams = AgentActivityParameterFactory.getAgentActivityParameterFactories(agents_ids,activities_ids);
+		List<? extends ParameterFactoryI> agentParams = AgentParametersFactory.getAgentParameterFactories(agents_ids);
+		AttractivenessParameterFactory attractivenessParams = new AttractivenessParameterFactory(agents_ids,activities_ids,citiesDs_ids,time);
+		Os2DsTravelCostDbParameterFactory osds = new Os2DsTravelCostDbParameterFactory(config,rm,citiesOs_ids,citiesDs_ids);
+		Ds2OsTravelCostDbParameterFactory dsos = new Ds2OsTravelCostDbParameterFactory(config,rm,citiesOs_ids,citiesDs_ids);
+		Ds2DsTravelCostDbParameterFactory dsds = new Ds2DsTravelCostDbParameterFactory(config,rm,citiesDs_ids);
+		
+		List<ParameterFactoryI> res = Stream.of(agentActivtyParams, agentParams)
+                 .flatMap(x -> x.stream())
+                 .collect(Collectors.toList());
+		
+		res.add(attractivenessParams);
+		res.add(osds);
+		res.add(dsos);
+		res.add(dsds);
+		
+		//parameters
+		List<ParameterI> prs = new ArrayList<>();
+		
+		for(ParameterFactoryI pi:res) {
+			prs.add(pi.run());
+		}
+		
+		for(ParameterI pr:prs) {
+			pr.save();
+		}
+		
+		rm.close();
+		System.out.println();
+	}
 
-	@Test
-	void RoutesTest() throws Exception {
-		
-		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
-		Controller controller = new Controller(config);
-		controller.run();
-		controller.emptyTempDirectory();
-		String db = "france2";
-		
-		List<Class<? extends NodeGeoI>> nodes = new ArrayList<>();
-		List<Class<? extends LinkI>> links = new ArrayList<>();
-		nodes.add(CityNode.class);
-		nodes.add(RoadNode.class);
-		links.add(CrossLink.class);
-		links.add(RoadLink.class);
-		
-		RoutingGraph rg = new RoutingGraph("train-intersections-graph-2",nodes,links,"avg_travel_time");
-		
-		List<RoutingGraph> rgs = new ArrayList<RoutingGraph>();
-		rgs.add(rg);
-		
-		RoutesMap rm = controller.getInjector().getInstance(RoutesMap.class);
-		rm.addProjections(rgs);
-		CityNode cityNode = new CityNode();
-		List<SourceRoutesRequest> srr = new ArrayList<>();
-		//srr.add(rm.new SourceRoutesRequest("train-intersections-graph-2",city,"city","Courcouronnes","city","avg_travel_time"));
-		srr.add(rm.new SourceRoutesRequest("train-intersections-graph-2",cityNode,"city","Paris","city","avg_travel_time",null));
-		//rm.addSourceRoutesFromNeo4j(srr);
-		rm.addNewRoutesFromJson();
-		//rm.saveJson();
-		System.out.println();
-		rm.close();
-	}
-	
-	@Test
-	void RoutesClustersTest() throws Exception {
-		
-		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
-		Controller controller = new Controller(config);
-		controller.run();
-		controller.emptyTempDirectory();
-		String db = "france2";
-		
-		List<Class<? extends NodeGeoI>> nodes = new ArrayList<>();
-		List<Class<? extends LinkI>> links = new ArrayList<>();
-		nodes.add(CityNode.class);
-		nodes.add(RoadNode.class);
-		nodes.add(RailNode.class);
-		links.add(CrossLink.class);
-		links.add(RoadLink.class);
-		links.add(RailLink.class);
-		RoutingGraph rg = new RoutingGraph("train-intersections-graph-3",nodes,links,"avg_travel_time");
-	
-		List<RoutingGraph> rgs = new ArrayList<RoutingGraph>();
-		rgs.add(rg);
-		Dataset dsi = (Dataset) controller.getInjector().getInstance(DatasetI.class);
-		RoutesMapCTAP rm = (RoutesMapCTAP) dsi.getMap(RoutesMap.ROUTES_MAP_KEY);
-		rm.addProjections(rgs);
-		List<SourceRoutesRequest> res = projects.CTAP.geolocClusters.Utils.getSRR_cluster1(rm, "train-intersections-graph-3", 250000);
-		res = res.stream().skip(60).limit(3).collect(Collectors.toList());
-		rm.addSourceRoutesFromNeo4j(res);
-		rm.saveJson();
-		rm.close();
-	}
-	
-	@Test
-	void agentsMapTest() throws Exception {
-		
-		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
-		Controller controller = new Controller(config);
-		controller.run();
-		controller.emptyTempDirectory();
-		
-		AgentsMap am = controller.getInjector().getInstance(AgentsMap.class);
-		am.getAgentsFromNeo4J(StdAgentNodeImpl.class);
-		System.out.println();
-		
-	}
-	
-	@Test
-	void locationsMapTest() throws Exception {
-		
-		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
-		Controller controller = new Controller(config);
-		controller.run();
-		controller.emptyTempDirectory();
-		
-		LocationsMap am = controller.getInjector().getInstance(LocationsMap.class);
-		//am.getLocationsFromNeo4J();
-		System.out.println();
-		
-	}
-	
-	@Test
-	void datasetControlerTest() throws Exception {
-		
-		Config config = Config.of (Paths.get("/home/stefanopenazzi/projects/jtap/config_.xml").toFile()); 
-		Controller controller = new Controller(config);
-		controller.run();
-		controller.emptyTempDirectory();
-		
-		DatasetI am = controller.getInjector().getInstance(DatasetI.class);
-		System.out.println();
-		
-	}
 }

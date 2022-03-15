@@ -12,7 +12,7 @@ public class StdAgentNodeImpl implements AgentNodeI {
 	
 	@CsvBindByName(column = "agent_id")
 	@Neo4JPropertyElement(key="agent_id",type=Neo4JType.TOINTEGER)
-	private Integer id;
+	private Long id;
 	
 	@CsvBindByName(column = "l_age")
 	@Neo4JPropertyElement(key="l_age",type=Neo4JType.TOINTEGER)
@@ -42,7 +42,11 @@ public class StdAgentNodeImpl implements AgentNodeI {
 	@Neo4JPropertyElement(key="time_related_budget",type=Neo4JType.TOFLOAT)
 	private Double timeRelatedBudget;
 	
-	public Integer getId() {
+	@CsvBindByName(column = "value_of_time")
+	@Neo4JPropertyElement(key="value_of_time",type=Neo4JType.TOFLOAT)
+	private Double valueOfTime;
+	
+	public Long getId() {
 		return this.id;
 	}
 	
@@ -70,5 +74,8 @@ public class StdAgentNodeImpl implements AgentNodeI {
 	}
 	public Double getTimeRelatedBudget() {
 		return this.timeRelatedBudget;
+	}
+	public Double getValueOfTime() {
+		return valueOfTime;
 	}
 }
