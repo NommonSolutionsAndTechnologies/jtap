@@ -11,13 +11,11 @@ import controller.Controller;
 import core.dataset.DatasetFactoryI;
 import core.dataset.DatasetI;
 import core.population.PopulationFactoryI;
-import core.solver.SolverImpl;
 import picocli.CommandLine;
-import projects.CTAP.population.Agent;
 import projects.CTAP.population.Population;
-import projects.CTAP.population.PopulationFactory;
+import projects.CTAP.solver.Solver;
 
-public class SingleAgentOptPlanPipeline  implements Callable<Integer> {
+public class ParallelAgentOptPlanPipeline implements Callable<Integer> {
 	
 	@CommandLine.Command(
 			name = "JTAP",
@@ -32,10 +30,10 @@ public class SingleAgentOptPlanPipeline  implements Callable<Integer> {
 	@CommandLine.Option(names = "--threads", defaultValue = "4", description = "Number of threads to use concurrently")
 	private int threads;
 	
-	private static final Logger log = LogManager.getLogger(SingleAgentOptPlanPipeline.class);
+	private static final Logger log = LogManager.getLogger(ParallelAgentOptPlanPipeline.class);
 
 	public static void main(String[] args) {
-		System.exit(new CommandLine(new SingleAgentOptPlanPipeline()).execute(args));
+		System.exit(new CommandLine(new ParallelAgentOptPlanPipeline()).execute(args));
 	}
 
 	@Override
@@ -50,13 +48,9 @@ public class SingleAgentOptPlanPipeline  implements Callable<Integer> {
 		DatasetFactoryI datasetFactory = controller.getInjector().getInstance(DatasetFactoryI.class);
 		DatasetI dataset = datasetFactory.run();
 		Population population = (Population) populationFactory.run(dataset);
-		Agent ag = (Agent) population.getAgentsIterator().next();
 		
-		double[] initialGuess = new double[] {0,2000,4000,5000,6000,7000,10000,15000,20000,22000,1999,3999,4999,5999,6999,7999,14999,19999,21999,22999};
-		SolverImpl si = new SolverImpl.Builder((ag.getAgentModels().get(0)))
-				.initialGuess(initialGuess)
-				.build();
-		si.run();
+		Solver ctapSolver = controller.getInjector().getInstance(Solver.class);
+		ctapSolver.run(population,dataset);
 		
 		return 1;
 		
