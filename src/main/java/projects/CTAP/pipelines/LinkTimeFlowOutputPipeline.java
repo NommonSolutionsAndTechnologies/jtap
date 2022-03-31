@@ -12,8 +12,8 @@ import core.dataset.DatasetFactoryI;
 import core.dataset.DatasetI;
 import core.population.PopulationFactoryI;
 import picocli.CommandLine;
-import projects.CTAP.output.LinkTimeFlow;
-import projects.CTAP.output.LinkTimeFlowDatasetJsonFactory;
+import projects.CTAP.outputAnalysis.LinkTimeFlow;
+import projects.CTAP.outputAnalysis.LinkTimeFlowDatasetJsonFactory;
 import projects.CTAP.population.Population;
 import projects.CTAP.solver.Solver;
 
@@ -45,6 +45,7 @@ public class LinkTimeFlowOutputPipeline implements Callable<Integer> {
 		Controller controller = new Controller(config);
 		controller.run();
 		controller.emptyTempDirectory();
+		controller.emptyOutputDirectory();
 		
 		PopulationFactoryI populationFactory = controller.getInjector().getInstance(PopulationFactoryI.class);
 		DatasetFactoryI datasetFactory = controller.getInjector().getInstance(DatasetFactoryI.class);
@@ -57,6 +58,7 @@ public class LinkTimeFlowOutputPipeline implements Callable<Integer> {
 		LinkTimeFlowDatasetJsonFactory lfd = controller.getInjector().getInstance(LinkTimeFlowDatasetJsonFactory.class);
 		LinkTimeFlow ltf = new LinkTimeFlow(population,336d,lfd.run(),config);
 		ltf.run();
+		ltf.saveDb();
 		
 		return 1;
 		
