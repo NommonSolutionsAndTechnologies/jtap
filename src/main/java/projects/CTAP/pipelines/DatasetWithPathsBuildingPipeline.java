@@ -64,6 +64,7 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		
 		RoutingManager rm = controller.getInjector().getInstance(RoutingManager.class);
 		
+		System.out.print("indexes \n");
 		//indexes
 		List<Long> agents_ids = data.external.neo4j.Utils.importNodes(StdAgentNodeImpl.class).stream().map(x -> x.getId()).collect(Collectors.toList());
 		List<Long> activities_ids = data.external.neo4j.Utils.importNodes(ActivityNode.class).stream().map(x -> x.getActivityId()).collect(Collectors.toList());
@@ -75,6 +76,21 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		Integer intervalTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getIntervalTime();
 		List<Long> time = LongStream.iterate(initialTime,i->i+intervalTime).limit(Math.round(finalTime/intervalTime)).boxed().collect(Collectors.toList());
 		
+		System.out.print(agents_ids);
+		System.out.print(" \n");
+		System.out.print(activities_ids);
+		System.out.print(" \n");
+		System.out.print(cities);
+		System.out.print(" \n");
+		System.out.print(citiesDs_ids);
+		System.out.print(" \n");
+		System.out.print(citiesOs_ids);
+		System.out.print(" \n");
+		
+		
+		
+		
+		System.out.print("factories \n");
 		//factories
 		//indexes
 		AgentsIndex agentIndex = new AgentsIndex(agents_ids);
@@ -102,6 +118,7 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		res.add(agLoc);
 		res.add(actLoc);
 		
+		System.out.print("parameters \n");
 		//parameters
 		List<ModelElementI> prs = new ArrayList<>();
 		
@@ -114,23 +131,24 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		prs.add(dsosParams.get(1));
 		prs.add(dsdsParams.get(0));
 		prs.add(dsdsParams.get(1));
-		
+		System.out.print("1... \n");
 		for(ParameterFactoryI pi:res) {
 			prs.add(pi.run());
 		}
+		System.out.print("2... \n");
 		prs.add(agentIndex);
 		prs.add(activitiesIndex);
 		prs.add(citiesDsIndex);
 		prs.add(citiesOsIndex);
 		prs.add(timeIndex);
 		
-		
+		System.out.print("saving... \n");
 		for(ModelElementI pr:prs) {
 			pr.save();
 		}
 		
 		rm.close();
-		
+		System.out.print("Finish \n");
 		return 1;
 	}
 

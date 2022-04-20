@@ -82,14 +82,22 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		System.out.print("Connections 1 \n");
 		//Connections between RoadNetwork and RailNetwork-----------------------
 		Map<Class<? extends NodeGeoI>,String> railConnMap = new HashMap<>();
-		railConnMap.put(RoadNode.class,"node_osm_id");
+		railConnMap.put(RoadNode.class,"node_osm_id");		
 		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap,2);
+		
+		//////////////////////////////
+		System.out.print("Connections 1-2 \n");
+		//Connections between RailNetwork and Cities-----------------------
+		Map<Class<? extends NodeGeoI>,String> railConnMap_city = new HashMap<>();
+		railConnMap_city.put(CityNode.class,"city_id");
+		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap_city,3);
+		//////////////////////////////
 		
 		System.out.print("Connections 2 \n");
 		//Connections between Cities and RoadNetwork/RailNetwork----------------
 		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
 		cityConnMap.put(RoadNode.class,"node_osm_id");
-		cityConnMap.put(RailNode.class, "stop_id");
+		// cityConnMap.put(RailNode.class, "stop_id");
 		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
 		
 		System.out.print("Activities \n");
@@ -107,6 +115,7 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 				(DefaultAttractivenessModelImpl)Controller.getInjector().getInstance(DefaultAttractivenessModelImpl.class),
 				new DefaultAttractivenessModelVarImpl());
 		
+		System.out.print("Transport links \n");
 		//insert transport links------------------------------------------------
 		DefaultCTAPTransportLinkFactory ctapTranspFactory = new DefaultCTAPTransportLinkFactory();
 		ctapTranspFactory.insertCTAPTransportLinkFactory(config.getCtapModelConfig()
