@@ -7,8 +7,10 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import config.Config;
 import controller.Controller;
 import core.dataset.ModelElementI;
@@ -34,7 +36,7 @@ import projects.CTAP.dataset.Ds2OsParametersFactory;
 import projects.CTAP.dataset.Os2DsParametersFactory;
 import projects.CTAP.dataset.TimeIndex;
 
-public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
+public class DatasetWithPathsThBuildingPipeline implements Callable<Integer> {
 	
 	@CommandLine.Command(
 			name = "JTAP",
@@ -49,10 +51,10 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 	@CommandLine.Option(names = "--threads", defaultValue = "4", description = "Number of threads to use concurrently")
 	private int threads;
 	
-	private static final Logger log = LogManager.getLogger(DatasetWithPathsBuildingPipeline.class);
+	private static final Logger log = LogManager.getLogger(DatasetWithPathsThBuildingPipeline.class);
 
 	public static void main(String[] args) {
-		System.exit(new CommandLine(new DatasetWithPathsBuildingPipeline()).execute(args));
+		System.exit(new CommandLine(new DatasetWithPathsThBuildingPipeline()).execute(args));
 	}
 
 	@Override
@@ -65,39 +67,17 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		
 		RoutingManager rm = controller.getInjector().getInstance(RoutingManager.class);
 		
-		System.out.print("indexes \n");
 		//indexes
 		List<Long> agents_ids = data.external.neo4j.Utils.importNodes(StdAgentNodeImpl.class).stream().map(x -> x.getId()).collect(Collectors.toList());
 		List<Long> activities_ids = data.external.neo4j.Utils.importNodes(ActivityNode.class).stream().map(x -> x.getActivityId()).collect(Collectors.toList());
 		List<CityNode> cities = data.external.neo4j.Utils.importNodes(CityNode.class);
-		//List<Long> citiesDs_ids = cities.stream().filter(e -> e.getId() == 0L).map(CityNode::getId).collect(Collectors.toList());    //just for test
-		List<Long> citiesDs_ids = new ArrayList<>(){
-            {
-                add(0L);
-                add(1L);
-            }
-        };
-		List<Long> citiesOs_ids = cities.stream().filter(e -> e.getId() == 3L).map(CityNode::getId).collect(Collectors.toList());     //just for test
+		List<Long> citiesDs_ids = cities.stream().filter(e -> e.getPopulation() > config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsPopThreshold()).map(CityNode::getId).collect(Collectors.toList()); 
+		List<Long> citiesOs_ids = cities.stream().filter(e -> e.getPopulation() <= config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsPopThreshold()).map(CityNode::getId).collect(Collectors.toList()); 
 		Integer initialTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getInitialTime();
 		Integer finalTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getFinalTime();
 		Integer intervalTime = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig().getIntervalTime();
 		List<Long> time = LongStream.iterate(initialTime,i->i+intervalTime).limit(Math.round(finalTime/intervalTime)).boxed().collect(Collectors.toList());
 		
-		System.out.print(agents_ids);
-		System.out.print(" \n");
-		System.out.print(activities_ids);
-		System.out.print(" \n");
-		System.out.print(cities);
-		System.out.print(" \n");
-		System.out.print(citiesDs_ids);
-		System.out.print(" \n");
-		System.out.print(citiesOs_ids);
-		System.out.print(" \n");
-		
-		
-		
-		
-		System.out.print("factories \n");
 		//factories
 		//indexes
 		AgentsIndex agentIndex = new AgentsIndex(agents_ids);
@@ -112,8 +92,9 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		Os2DsParametersFactory osds = new Os2DsParametersFactory(config,rm,citiesOs_ids,citiesDs_ids);
 		Ds2OsParametersFactory dsos = new Ds2OsParametersFactory(config,rm,citiesOs_ids,citiesDs_ids);
 		Ds2DsParametersFactory dsds = new Ds2DsParametersFactory(config,rm,citiesDs_ids);
-		AgentHomeLocationParameterFactory agLoc = new AgentHomeLocationParameterFactory(agents_ids,citiesOs_ids);
-		List<Long> testActLoc = new ArrayList<>() {{add(0L);}};            //just for test
+		List<Long> testCities = new ArrayList<>() {{add(3L);}};                     //just for test
+		AgentHomeLocationParameterFactory agLoc = new AgentHomeLocationParameterFactory(agents_ids,testCities);
+		List<Long> testActLoc = new ArrayList<>() {{add(0L);}};
 		ActivityLocationCostParameterFactory actLoc = new ActivityLocationCostParameterFactory(testActLoc,activities_ids);
 		DestinationsProbDistParameterFactory dpd = new DestinationsProbDistParameterFactory(citiesOs_ids,citiesDs_ids);
 		
@@ -126,7 +107,6 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		res.add(actLoc);
 		res.add(dpd);
 		
-		System.out.print("parameters \n");
 		//parameters
 		List<ModelElementI> prs = new ArrayList<>();
 		
@@ -139,26 +119,26 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		prs.add(dsosParams.get(1));
 		prs.add(dsdsParams.get(0));
 		prs.add(dsdsParams.get(1));
-		System.out.print("1... \n");
+		
 		for(ParameterFactoryI pi:res) {
 			prs.add(pi.run());
 		}
-		System.out.print("2... \n");
 		prs.add(agentIndex);
 		prs.add(activitiesIndex);
 		prs.add(citiesDsIndex);
 		prs.add(citiesOsIndex);
 		prs.add(timeIndex);
 		
-		System.out.print("saving... \n");
+		
 		for(ModelElementI pr:prs) {
 			pr.save();
 		}
 		
 		rm.close();
-		System.out.print("Finish \n");
+		
 		return 1;
 	}
 
 }
+
 
