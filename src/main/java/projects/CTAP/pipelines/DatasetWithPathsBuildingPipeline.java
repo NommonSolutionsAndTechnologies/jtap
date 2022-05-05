@@ -95,8 +95,6 @@ public class DatasetWithPathsBuildingPipeline implements Callable<Integer> {
 		System.out.print(" \n");
 		
 		
-		
-		
 		System.out.print("factories \n");
 		//factories
 		//indexes

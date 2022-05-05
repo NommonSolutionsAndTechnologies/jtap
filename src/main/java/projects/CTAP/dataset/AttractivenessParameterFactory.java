@@ -39,7 +39,7 @@ public class AttractivenessParameterFactory implements ParameterFactoryI {
 		StringBuilder cities = new StringBuilder();
 		cities.append(" [");
 		for (Long i : this.parameterDescription.get(1)) {
-			System.out.print(i);
+
 			cities.append("");
 			cities.append(Long.toString(i));
 			cities.append(",");
@@ -52,12 +52,11 @@ public class AttractivenessParameterFactory implements ParameterFactoryI {
 		                 " where m.city_id IN " + cities.toString()
 		                 +" return n.agent_id,m.city_id,r.activity_id,r.time,r.attractiveness";
 		
-		System.out.print(query);
-		System.out.print(" \n ");  
+ 
 		List<Record> queryRes = null;
 		try {
 			queryRes = data.external.neo4j.Utils.runQuery(query, AccessMode.READ);
-			System.out.print(" Read query\n ");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -69,41 +68,26 @@ public class AttractivenessParameterFactory implements ParameterFactoryI {
 					String.valueOf(rec.values().get(2).asInt())+
 					String.valueOf(rec.values().get(3).asInt());
 			map.put( key,(float)rec.values().get(4).asDouble());
-			System.out.print("point 0 \n");
-			System.out.print(key);
-			System.out.print(map);
+
 		}
-		System.out.print(map);
-		System.out.print(" \n ");
-		System.out.print(queryRes);
-		System.out.print(" \n ");
+
 		
-		System.out.print("point A \n");
+
 		for(int i=0;i<this.parameterDescription.get(0).size();i++) {
-			System.out.print("point B \n");
+			
 			for(int j=0;j<this.parameterDescription.get(1).size();j++) {
-				System.out.print("point C \n");
+				
 				for(int k=0;k<this.parameterDescription.get(2).size();k++) {
-					System.out.print("point D \n");
+					
 					for(int t=0;t<this.parameterDescription.get(3).size();t++) {
-						System.out.print("point E \n");
 						
-						System.out.print(i);
-						System.out.print(" \n ");
-						System.out.print(j);
-						System.out.print(" \n ");
-						System.out.print(k);
-						System.out.print(" \n ");
-						System.out.print(t);
-						System.out.print(" \n ");
+					
 						
 						String key = parameterDescription.get(0).get(i).toString()+
 								parameterDescription.get(1).get(j).toString()+
 								parameterDescription.get(2).get(k).toString()+
 								parameterDescription.get(3).get(t).toString();
-						System.out.print("point F \n");
-						System.out.print(key);
-						System.out.print(" \n ");
+
 						parameter[i][j][k][t] = map.get(key);
 					}
 				}
