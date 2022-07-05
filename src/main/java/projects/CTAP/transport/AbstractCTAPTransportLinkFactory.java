@@ -15,7 +15,7 @@ public abstract class AbstractCTAPTransportLinkFactory {
     public void insertCTAPTransportLinkFactory(Object tlc) throws Exception {
 		
 		Config config = Controller.getConfig();
-		String query = "match (n)-[r:RoadLink|RailLink|CrossLink|AirLink]->(m) where (n:CityNode OR n:RailNode OR n:RoadNode OR n:AirNode) AND (m:CityNode OR m:RailNode OR m:RoadNode OR n:AirNode) return r";
+		String query = "match (n)-[r:RoadLink|RailLink|CrossLink|AirLink]->(m) where (n:CityNode OR n:RailNode OR n:RoadNode OR n:AirNode) AND (m:CityNode OR m:RailNode OR m:RoadNode OR m:AirNode) return r";
 		
 		List<Record> links = data.external.neo4j.Utils.runQuery(query,AccessMode.READ);
 		List<CTAPTransportLink> linksList = new ArrayList<>();

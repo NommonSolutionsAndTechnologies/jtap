@@ -58,7 +58,7 @@ public class ProbDistEvenHomeActivityLocation implements ActivityLocationI {
 		for(int i =1;i<destProb.length;i++) {
 			destProbCDF[i]=destProbCDF[i-1]+destProb[i];
 		}
-		
+
 		for(int i =0;i<maxCombinations;i++) {
 			int[] ll = new int[nPlanActivities];
 			for(int j = 0;j<nPlanActivities;j+=2) {
@@ -109,7 +109,7 @@ public class ProbDistEvenHomeActivityLocation implements ActivityLocationI {
             }
             //right
             else {
-            	if (arr[mid+1]>x) return mid;
+            	if (arr[mid+1]>x) return mid + 1;
             	return binarySearchForIndex(arr, mid + 1, r, x);
             }
         }

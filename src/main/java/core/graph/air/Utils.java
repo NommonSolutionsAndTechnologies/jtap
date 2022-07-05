@@ -36,6 +36,8 @@ public class Utils {
         	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:RoadNode)<-[r:CrossLink|CTAPTransportLink]-(m:AirNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
         	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:RailNode)-[r:CrossLink|CTAPTransportLink]->(m:AirNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
         	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:RailNode)<-[r:CrossLink|CTAPTransportLink]-(m:AirNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
+        	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:AirNode)-[r:CrossLink|CTAPTransportLink]->(m:CityNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
+        	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:CityNode)-[r:CrossLink|CTAPTransportLink]->(m:AirNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
         	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:AirNode)-[r:AirLink|CTAPTransportLink]-(m:AirNode) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
         	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n:AirNode) RETURN n limit 10000000\", \"delete n\",{batchSize:100000});",AccessMode.WRITE );
 			conn.query(database,"DROP INDEX AirNodeIndex IF EXISTS",AccessMode.WRITE );

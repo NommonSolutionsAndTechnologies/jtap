@@ -61,8 +61,41 @@ public class DefaultCTAPTransportLinkFactory extends AbstractCTAPTransportLinkFa
 	}
 
 	@Override
-	public double CTAPTransportAirLinkValue(Object tlc, Map<String, Object> inputData) {
-		return Double.MAX_VALUE;
-	}
+	public double CTAPTransportAirLinkValue(Object tlc_, Map<String, Object> inputData) {
+		CtapTransportLinkConfig tlc = (CtapTransportLinkConfig)tlc_;
+		String ldt = (String)inputData.get("last_dep_time");
+		String fdt = (String)inputData.get("first_dep_time");
+		
+		if(ldt == null) {
+			ldt = "23:59";
+		}
+		if(fdt == null) {
+			fdt = "00:00";
+		}
+		
+		DateFormat dateFormat = new SimpleDateFormat("HH:mm");
+		Date lastDepTime = null;
+		Date firstDepTime = null;
+		try {
+			lastDepTime = dateFormat.parse(ldt);
+			firstDepTime = dateFormat.parse(fdt);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		Long diff = (lastDepTime.getTime() - firstDepTime.getTime())/1000;
+		Long connPerDay = (Long)inputData.get("connections_per_day");
+		
+		if(connPerDay == null) {
+			connPerDay = 1L;
+		}
+		
+		double reliability = ((diff.doubleValue()/connPerDay.doubleValue())/2)*tlc.getMvServicePerceivedReliability();
+		
+		return (double)inputData.get("avg_travel_time")*tlc.getMvTransferTime().getPlane() 
+				+ (double)inputData.get("avg_travel_time")*30.55*tlc.getPriceXKm().getPlane()
+				+ reliability
+				+ 300 * tlc.getMvWaitingTime();
+		}
 
 }

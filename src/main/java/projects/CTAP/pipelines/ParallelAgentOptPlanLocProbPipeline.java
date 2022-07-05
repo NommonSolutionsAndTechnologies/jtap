@@ -11,10 +11,14 @@ import controller.AbstractModule;
 import controller.Controller;
 import core.dataset.DatasetFactoryI;
 import core.dataset.DatasetI;
+import core.population.PopulationFactoryI;
 import picocli.CommandLine;
 import projects.CTAP.model.ActivityLocationI;
 import projects.CTAP.model.ProbDistEvenHomeActivityLocation;
+import projects.CTAP.outputAnalysis.LinkTimeFlow;
+import projects.CTAP.outputAnalysis.LinkTimeFlowDatasetJsonFactory;
 import projects.CTAP.population.Population;
+import projects.CTAP.population.PopulationFactory;
 import projects.CTAP.population.PopulationSingleAgentFactory;
 import projects.CTAP.solver.Solver;
 
@@ -55,15 +59,23 @@ public class ParallelAgentOptPlanLocProbPipeline implements Callable<Integer> {
 		controller.run();
 		controller.emptyTempDirectory();
 		
-		//PopulationFactoryI populationFactory = controller.getInjector().getInstance(PopulationFactoryI.class);
-		PopulationSingleAgentFactory populationFactory = controller.getInjector().getInstance(PopulationSingleAgentFactory .class);
+		System.out.print("Factory \n");
+		PopulationFactoryI populationFactory = controller.getInjector().getInstance(PopulationFactoryI.class);
+		//PopulationSingleAgentFactory populationFactory = controller.getInjector().getInstance(PopulationSingleAgentFactory .class);
 		DatasetFactoryI datasetFactory = controller.getInjector().getInstance(DatasetFactoryI.class);
 		DatasetI dataset = datasetFactory.run();
 		Population population = (Population) populationFactory.run(dataset);
 		
+		System.out.print("Solver \n");
 		Solver ctapSolver = controller.getInjector().getInstance(Solver.class);
 		ctapSolver.run(population,dataset);
 		population.save();
+		
+		System.out.print("Flows \n");
+		LinkTimeFlowDatasetJsonFactory lfd = controller.getInjector().getInstance(LinkTimeFlowDatasetJsonFactory.class);
+		LinkTimeFlow ltf = new LinkTimeFlow(population,336d,lfd.run(),config);
+		ltf.run();
+		ltf.saveDb();
 		
 		return 1;
 		

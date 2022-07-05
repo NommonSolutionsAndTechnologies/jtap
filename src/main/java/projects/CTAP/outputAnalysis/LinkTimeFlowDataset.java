@@ -30,7 +30,7 @@ public class LinkTimeFlowDataset implements DatasetI  {
 	}
 	
 	public CitiesDsIndex getCitiesDsIndex() {
-		return citiesDsIndex;
+		return this.citiesDsIndex;
 	}
 	
 	public CitiesOsIndex getCitiesOsIndex() {
