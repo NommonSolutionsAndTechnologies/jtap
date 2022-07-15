@@ -104,24 +104,32 @@ public final class Utils {
 					 .collect(Collectors.groupingBy(StopTime::getTripId));
 		}
 		
+		int travelTime = 0;
+		
 		for (var entry : tripStops.entrySet()) {
 			List<StopTime> st = entry.getValue();
 		    for(int j=0;j<st.size()-1;j++) {
+		    	travelTime = st.get(j+1).getArrivalTime().toSecondOfDay()-st.get(j).getDepartureTime().toSecondOfDay();
+		    	if(travelTime < 0) {
+		    		travelTime = travelTime + 24*3600;
+		    	}
 		    	Connection c = new Connection(st.get(j).getStopId(),
 		    			st.get(j+1).getStopId(),
 		    			st.get(j).getDepartureTime(),
-		    			st.get(j+1).getArrivalTime().toSecondOfDay()-
-	                    		  st.get(j).getDepartureTime().toSecondOfDay());
+		    			travelTime);
 		    	connections.add(c);
 		    }
 		    //TODO avg travel time 
 		    if(directConnections) {
 		    	for(int j=2;j<st.size()-1;j++) {
+			    	travelTime = st.get(j).getArrivalTime().toSecondOfDay()-st.get(0).getDepartureTime().toSecondOfDay();
+			    	if(travelTime < 0) {
+			    		travelTime = travelTime + 24*3600;
+			    	}
 			    	Connection c = new Connection(st.get(0).getStopId(),
 			    			st.get(j).getStopId(),
 			    			st.get(0).getDepartureTime(),
-			    			st.get(j).getArrivalTime().toSecondOfDay()-
-		                    		  st.get(0).getDepartureTime().toSecondOfDay());
+			    			travelTime);
 			    	connections.add(c);
 			    }
 		    }

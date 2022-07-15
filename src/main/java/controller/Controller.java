@@ -47,9 +47,9 @@ public class Controller implements ControllerI {
 	
 	public static void emptyTempDirectory() {
 		File directory = new File(getInjector().getInstance(Config.class).getGeneralConfig().getTempDirectory());
-		File[] files = directory.listFiles();    
+		File[] files = directory.listFiles();
 		for(File file : files) {
-		  file.delete();
+			  file.delete();
 		}
 	}
 	public static void emptyOutputDirectory() {

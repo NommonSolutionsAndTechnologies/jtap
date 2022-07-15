@@ -26,6 +26,7 @@ import projects.CTAP.attractiveness.normalized.DefaultAttractivenessModelImpl;
 import projects.CTAP.attractiveness.normalized.DefaultAttractivenessModelVarImpl;
 import projects.CTAP.graphElements.ActivityCityLink;
 import projects.CTAP.transport.DefaultCTAPTransportLinkFactory;
+import projects.CTAP.transport.SpainCTAPTransportLinkFactory;
 
 public class ScenarioBuildingPipelineSpain_2 implements Callable<Integer> {
 	
@@ -136,7 +137,7 @@ public class ScenarioBuildingPipelineSpain_2 implements Callable<Integer> {
 		
 		System.out.print("Transport links \n");
 		//insert transport links------------------------------------------------
-		DefaultCTAPTransportLinkFactory ctapTranspFactory = new DefaultCTAPTransportLinkFactory();
+		SpainCTAPTransportLinkFactory ctapTranspFactory = new SpainCTAPTransportLinkFactory();
 		ctapTranspFactory.insertCTAPTransportLinkFactory(config.getCtapModelConfig()
 				.getTransportConfig().getCtapTransportLinkConfig());
 		

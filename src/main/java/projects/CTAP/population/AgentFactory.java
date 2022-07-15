@@ -73,8 +73,21 @@ public class AgentFactory implements AgentFactoryI {
 				timeDuration[i] = dataset.getTimeDurationParameter().getParameter()[agentIndex][actIndex];
             	
             	//locationPerception[i] = this.dataset.getLocationPerceptionParameter().getParameter()[al[1][i]];
-    			sigmaActivityCalibration[i] = 1;
-    			tauActivityCalibration[i] = 1;
+				locationPerception[i] = 0.5 + Math.random() * (1.5 - 0.5);
+				if(actIndex == 0) {
+					sigmaActivityCalibration[i] = 0.0067;
+	    			tauActivityCalibration[i] = 0.002;
+				}
+				
+				if(actIndex == 1) {
+					sigmaActivityCalibration[i] = 0.002;
+	    			tauActivityCalibration[i] = 0.02;
+				}
+				else {
+					sigmaActivityCalibration[i] = 0.0004;
+	    			tauActivityCalibration[i] = 0.004;
+				}
+
     			//assuming first activity is always the default one
     			if(i%2==0 && i < nPlanActivities-1) {
     				int nextLocIndex = al[1][i+1];
@@ -109,14 +122,27 @@ public class AgentFactory implements AgentFactoryI {
 					travelCost,travelTime,monetaryBudget, timeRelatedBudget, activityLocationCostRate,
 					valueOfTime,attractiveness,attractivenessTimeInterval);
 			List<ConstraintI> constraints = new ArrayList<>();
-			double[] lb = new double[nPlanActivities*2];
-			double[] ub = new double[nPlanActivities*2];
+			double[] lb = new double[nPlanActivities];
+			double[] ub = new double[nPlanActivities];
 			Arrays.fill(lb, 0d);
 			Arrays.fill(ub, 8760d);
 			constraints.add(new LowerBoundCTAP(lb));
 			constraints.add(new UpperBoundCTAP(ub));
-			double[] initGuess = new double[nPlanActivities*2];
-			Arrays.fill(ub, 4000d);
+			double[] initGuess = new double[nPlanActivities];
+			for(int i =0;i<initGuess.length-1;i++ ) {
+				if(al[0][i] == 0) {
+					initGuess[i] = Math.random() * 60 * 24;
+				}
+				
+				if(al[0][i] == 1) {
+					initGuess[i] = Math.random() * 6 * 24;
+				}
+				else {
+					initGuess[i] = Math.random() * 30 * 24;
+				}
+				
+			}
+			Arrays.fill(ub, 2400d);
 			
 			models.add(new ModelCTAP(objF,constraints,initGuess));
 			

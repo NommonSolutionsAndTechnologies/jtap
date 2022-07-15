@@ -141,8 +141,6 @@ public class LinkTimeFlowSpain {
 												[dataset.getAgentHomeLocationParameter().getParameterDescription().get(1).indexOf(agent.getLocationId())];
 				
 				for(int i = 0;i<bestPlan.getLocations().length-1;i++) {
-					System.out.print(bestPlan.getLocations());
-					System.out.print("\n");
 					List<Long> links = null;
 					if(i%2 == 0) {
 						if(homeDs) {
@@ -150,14 +148,13 @@ public class LinkTimeFlowSpain {
 							double cost0 = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost1 = dataset.getDs2DsTravelCostParameter()
-									.getParameter()[1][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							double cost2 = dataset.getDs2DsTravelCostParameter()
+									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
 							double cost3 = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost1, cost3);
-							System.out.print(projection);
+							int projection = modalSplit(lambda, cost0, cost2, cost3);
 							/////							
 							
 							links = dataset.getDs2DsPathParameter()
@@ -168,14 +165,13 @@ public class LinkTimeFlowSpain {
 							double cost0 = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost1 = dataset.getOs2DsTravelCostParameter()
-									.getParameter()[1][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							double cost2 = dataset.getOs2DsTravelCostParameter()
+									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
 							double cost3 = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost1, cost3);
-							System.out.print(projection);
+							int projection = modalSplit(lambda, cost0, cost2, cost3);
 							/////
 							links = dataset.getOs2DsPathParameter()
                         			.getParameter()[projection][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
@@ -188,14 +184,13 @@ public class LinkTimeFlowSpain {
 							double cost0 = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost1 = dataset.getDs2DsTravelCostParameter()
-									.getParameter()[1][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							double cost2 = dataset.getDs2DsTravelCostParameter()
+									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
 							double cost3 = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost1, cost3);
-							System.out.print(projection);
+							int projection = modalSplit(lambda, cost0, cost2, cost3);
 							/////
                    
                         	
@@ -207,14 +202,13 @@ public class LinkTimeFlowSpain {
 							double cost0 = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost1 = dataset.getDs2OsTravelCostParameter()
-									.getParameter()[1][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							double cost2 = dataset.getDs2OsTravelCostParameter()
+									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
 							double cost3 = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost1, cost3);
-							System.out.print(projection);
+							int projection = modalSplit(lambda, cost0, cost2, cost3);
 							/////							
 							
 							
@@ -229,6 +223,9 @@ public class LinkTimeFlowSpain {
 						//TODO avoid negative index
 						//resMap.get(link).addAndGet(0, 1);
 						//resMap.get(link).incrementAndGet((int) Math.floor(bestPlan.getTs()[i]/timeInterval));
+						if(bestPlan.getTs()[i] >= 8760 ) {
+							System.out.print("error \n");
+						}
 						resMap.get(link).addAndGet((int) Math.floor(bestPlan.getTs()[i]/timeInterval), agentSize);
 					}
 				}
@@ -264,7 +261,7 @@ public class LinkTimeFlowSpain {
         	        	return 0;
         	        }
         	        else {
-        	        	return 1;
+        	        	return 2;
         	        }
         	        		
         			
@@ -292,7 +289,7 @@ public class LinkTimeFlowSpain {
         	        	return 0;
         	        }
         	        else {
-        	        	return 1;
+        	        	return 2;
         	        }
         			
         		}
@@ -335,7 +332,7 @@ public class LinkTimeFlowSpain {
         	        }
         	        else {
         	        	if(rr < prob1) {
-        	        		return 1;
+        	        		return 2;
         	        	}
         	        	else {
         	        		return 3;

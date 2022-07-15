@@ -66,7 +66,7 @@ public class ScenarioBuildingPipelineSpain_1 implements Callable<Integer> {
 		//insert GTFS-----------------------------------------------------------
 		GTFS gtfs = controller.getInjector().getInstance(GTFS.class);
 		core.graph.rail.Utils.deleteRailGTFS();
-		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2019-10-06");
+		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2022-07-13");
 		
 		System.out.print("Air network \n");
 		//insert air network

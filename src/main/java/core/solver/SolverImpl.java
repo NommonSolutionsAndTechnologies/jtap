@@ -60,7 +60,7 @@ public class SolverImpl implements SolverI {
 		pvp = optimizer.optimize(
 				new ObjectiveFunction(new MultivariateFunctionSolver(this.model)),
 				GoalType.MINIMIZE,
-				new MaxIter(1000),
+				new MaxIter(5000000),
 				MaxEval.unlimited(),
 				new InitialGuess(this.initialGuess),
 				new CMAESOptimizer.PopulationSize(3),

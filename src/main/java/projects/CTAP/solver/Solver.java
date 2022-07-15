@@ -102,7 +102,32 @@ public class Solver {
 					
 					PointValuePair pvp =  si.run();
 					
-					agentPlans.add(new Plan(ofc.getLocations(),ofc.getActivities(),pvp.getFirst(),pvp.getSecond()));
+					double[] t = pvp.getFirst();
+					
+					double[] ts = new double[t.length];
+					double[] te = new double[t.length];
+					
+					for(int i =1;i<t.length;i++ ) {
+
+						te[i-1] = ts[i-1] + t[i-1];
+						ts[i] = te[i-1];
+	
+						if(i == t.length - 1 ) {
+							te[i] = ts[i] + t[i];
+						}
+					}
+					
+					double[] output = new double[t.length * 2];
+					
+					for(int j =0; j<ts.length;j++) {
+						output[j] = ts[j];
+					}
+					
+					for(int j =0; j<te.length;j++) {
+						output[j + ts.length ] = te[j];
+					}					
+					
+					agentPlans.add(new Plan(ofc.getLocations(),ofc.getActivities(),output,pvp.getSecond()));
 				}
 				agent.setOptimalPlans(agentPlans);
 			}
