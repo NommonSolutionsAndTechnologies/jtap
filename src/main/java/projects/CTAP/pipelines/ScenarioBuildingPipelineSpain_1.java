@@ -68,6 +68,8 @@ public class ScenarioBuildingPipelineSpain_1 implements Callable<Integer> {
 		core.graph.rail.Utils.deleteRailGTFS();
 		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2022-07-13");
 		
+		/*
+		
 		System.out.print("Air network \n");
 		//insert air network
 		core.graph.air.Utils.insertAirNetworkNeo4j();
@@ -146,6 +148,7 @@ public class ScenarioBuildingPipelineSpain_1 implements Callable<Integer> {
 //		//insert destinationProbLinks-------------------------------------------
 //		projects.CTAP.activityLocationSequence.Utils.insertDestinationProbIntoNeo4j();
 		
+		*/
 		return 1;
 	}
 }

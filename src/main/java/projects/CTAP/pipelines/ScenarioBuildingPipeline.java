@@ -53,13 +53,15 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		controller.emptyTempDirectory();
 		
 		//Road------------------------------------------------------------------
-		core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
+		//core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
 		
 		//insert GTFS-----------------------------------------------------------
 		GTFS gtfs = controller.getInjector().getInstance(GTFS.class);
 		core.graph.rail.Utils.deleteRailGTFS();
 		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2021-07-18");
 		
+		
+		/*
 		//insert air network
 		core.graph.air.Utils.insertAirNetworkNeo4j();
 		
@@ -113,6 +115,8 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		
 		//insert destinationProbLinks-------------------------------------------
 		projects.CTAP.activityLocationSequence.Utils.insertDestinationProbIntoNeo4j();
+		
+		*/
 		
 		return 1;
 	}
