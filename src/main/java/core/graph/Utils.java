@@ -4,9 +4,11 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.neo4j.driver.AccessMode;
@@ -209,6 +211,118 @@ public class Utils {
 	 * @param direction            1: dep->arr 2:arr->dep 3: dep <-> arr
 	 * @throws Exception
 	 */
+	
+	public static <T extends NodeGeoI,K extends NodeGeoI>  void setShortestDistCrossLinkSpainFact2(String database,String tempDirectory,Class<T> nodeDeparture,String propNodeDeparture,Class<K> nodeArrival,String propNodeArrival,int direction) throws Exception {
+		
+		String labelNodeDeparture = null;
+		String labelNodeArrival =null;
+		if(nodeDeparture.isAnnotationPresent(Neo4JNodeElement.class) && 
+				nodeArrival.isAnnotationPresent(Neo4JNodeElement.class)) {
+			labelNodeDeparture = nodeDeparture.getAnnotation(Neo4JNodeElement.class).labels()[0];
+			labelNodeArrival = nodeArrival.getAnnotation(Neo4JNodeElement.class).labels()[0];
+			Boolean annotationFieldDeparture = FieldUtils.getFieldsListWithAnnotation(nodeDeparture, Neo4JPropertyElement.class).stream()
+					.filter(f -> f.getAnnotation(Neo4JPropertyElement.class)
+							.key().equals(propNodeDeparture)).toArray().length == 1? true:false;
+			Boolean annotationFieldArrival = FieldUtils.getFieldsListWithAnnotation(nodeArrival, Neo4JPropertyElement.class).stream()
+					.filter(f -> f.getAnnotation(Neo4JPropertyElement.class)
+							.key().equals(propNodeArrival)).toArray().length == 1? true:false;
+			if(!(annotationFieldDeparture && annotationFieldArrival)) {
+				throw new Exception("Property not found");
+			}
+		}
+		else {
+			throw new Exception("Only classes annotated with @Neo4JNodeElement can be converted in nodes");
+		}
+	    
+		List<Record> nodeDepartureRecords = null;
+		try( Neo4jConnection conn = new Neo4jConnection()){  
+			nodeDepartureRecords = conn.query(database,"MATCH (n:"+labelNodeDeparture+") RETURN n",AccessMode.READ);
+		}
+		
+		Config config = Controller.getConfig();
+		String destinationsFacilityIDs = config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsFacilityIDs();
+		
+		List<Record> arrivalNodeRecords = null;
+		try( Neo4jConnection conn = new Neo4jConnection()){  
+			arrivalNodeRecords = conn.query(database,"MATCH (n:"+labelNodeArrival+") WHERE n.city_id in [" + destinationsFacilityIDs + "] RETURN n",AccessMode.READ);
+		}
+		
+		//KDTREE contains all the node that need to be connected with departure nodes.
+		List<KdTree.Node> kdtNodes = new ArrayList<>();
+		for(Record r: arrivalNodeRecords) {
+			List<org.neo4j.driver.util.Pair<String, Value>> values = r.fields();
+			for (org.neo4j.driver.util.Pair<String, Value> nameValue: values) {
+			    if ("n".equals(nameValue.key())) { 
+			        Value value = nameValue.value();
+			        if(!value.get("lat").isNull() && !value.get("lon").isNull() 
+			        		&& !value.get(propNodeArrival).isNull()) {
+				        Double lat = value.get("lat").asDouble();
+				        Double lon = value.get("lon").asDouble();
+				        String sid = String.valueOf(value.get(propNodeArrival).asObject());
+				        kdtNodes.add(new KdTree.Node(lat,lon,sid));
+			        }
+			    }
+			}
+		}
+		
+		//insert  arrivalNodes in a KD-TREE structure to facilitate the research of the closest to the departureNode
+		KdTree kdt = new KdTree(2,kdtNodes);
+		List<CrossLink> links = new ArrayList<>();
+		List<CrossLink> links2Dir = new ArrayList<>();
+		
+		for(Record r: nodeDepartureRecords) {
+			Double lat = null; 
+	        Double lon = null;
+	        String sid = null;
+			List<org.neo4j.driver.util.Pair<String, Value>> values = r.fields();
+			for (org.neo4j.driver.util.Pair<String, Value> nameValue: values) {
+			    if ("n".equals(nameValue.key())) {  // you named your node "p"
+			        Value value = nameValue.value();
+			        if(!value.get("lat").isNull() && !value.get("lon").isNull() 
+			        		&& !value.get(propNodeDeparture).isNull()) {
+			        	lat = value.get("lat").asDouble();
+				        lon = value.get("lon").asDouble();
+				        sid = String.valueOf(value.get(propNodeDeparture).asObject());
+				        //find the closest node
+				        KdTree.Node n = kdt.findNearest(new KdTree.Node(
+								lat,lon,null));
+				        int dist = Gis.longDist(lat,lon,n.getCoords()[0],n.getCoords()[1]);
+				        int avgTravelTime = (int)(dist/CARSPEED);
+				        if(direction == 1 || direction == 3) {
+				        	links.add(new CrossLink(sid,n.getValue().toString(),dist,avgTravelTime));
+				        }
+						if(direction == 2 || direction == 3) {
+							links2Dir.add(new CrossLink(n.getValue().toString(),sid,dist,avgTravelTime));
+						}
+						break;	
+			        }
+			    }
+			}
+		}
+		
+		if(direction == 1 || direction == 3) {
+		data.external.neo4j.Utils.insertLinks(database,tempDirectory,links
+				,CrossLink.class,nodeDeparture,propNodeDeparture,"from",nodeArrival,propNodeArrival,"to");	
+		}
+		if(direction == 2 || direction == 3) {
+			data.external.neo4j.Utils.insertLinks(database,tempDirectory,links2Dir
+					,CrossLink.class,nodeArrival,propNodeArrival,"from",nodeDeparture,propNodeDeparture,"to");
+		}
+	}
+	
+
+	
+	/**
+	 * @param <T>
+	 * @param database
+	 * @param tempDirectory
+	 * @param nodeDeparture
+	 * @param propNodeDeparture
+	 * @param nodeArrivalMap
+	 * @param direction            1: dep->arr 2:arr->dep 3: dep <-> arr
+	 * @throws Exception
+	 */
+	
 	public static <T extends NodeGeoI> void setShortestDistCrossLink(Class<T> nodeDeparture,String propNodeDeparture,
 			Map<Class<? extends NodeGeoI>,String> nodeArrivalMap,int direction) throws Exception {
 		
@@ -219,6 +333,19 @@ public class Utils {
 	    while (it.hasNext()) {
 	    	Map.Entry<Class<? extends NodeGeoI>,String> pair = (Map.Entry)it.next();
 	    	setShortestDistCrossLink(database,tempDirectory,nodeDeparture,propNodeDeparture,pair.getKey(),pair.getValue(),direction);
+	    }
+	}
+	
+	public static <T extends NodeGeoI> void setShortestDistCrossLinkSpainFact(Class<T> nodeDeparture,String propNodeDeparture,
+			Map<Class<? extends NodeGeoI>,String> nodeArrivalMap,int direction) throws Exception {
+		
+		Config config = Controller.getConfig();
+		String tempDirectory = config.getGeneralConfig().getTempDirectory();
+		String database = config.getNeo4JConfig().getDatabase();
+		Iterator it = nodeArrivalMap.entrySet().iterator();
+	    while (it.hasNext()) {
+	    	Map.Entry<Class<? extends NodeGeoI>,String> pair = (Map.Entry)it.next();
+	    	setShortestDistCrossLinkSpainFact2(database,tempDirectory,nodeDeparture,propNodeDeparture,pair.getKey(),pair.getValue(),direction);
 	    }
 	}
 	
@@ -235,6 +362,8 @@ public class Utils {
 	 * @param nodeClass
 	 * @return
 	 */
+		
+	
 	@SuppressWarnings("deprecation")
 	public static <T extends GraphElement> T map2GraphElement(Map<String,Object> map,Class<T> nodeClass) {
 			T tsp = null;

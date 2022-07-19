@@ -2,52 +2,37 @@ package config;
 
 import java.io.Serializable;
 
-import jakarta.xml.bind.annotation.*;
-
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "airConfig")
-public class AirConfig implements Serializable {
+public class AirConfig implements Serializable{
 	
-	private static final long serialVersionUID = 1L;
+	private String airportsDirectory;
+	private String connectionsDirectory;
 	
-	private String gtfsDirectory;
-	private Boolean directConnections;
+	public AirConfig() {}
 	
-	public AirConfig() {
-		
+	public AirConfig(String airportsDirectory,String connectionsDirectory) {
+		this.airportsDirectory = airportsDirectory;
+		this.connectionsDirectory = connectionsDirectory;
+	}
+	 
+	@XmlElement(name = "airportsDirectory",required = true)
+	public String getAirportsDirectory() {
+		return airportsDirectory;
 	}
 	
-    public AirConfig(String gtfsDirectory,Boolean directConnections) {
-    	this.gtfsDirectory = gtfsDirectory;
-    	this.directConnections = directConnections;
+	@XmlElement(name = "connectionsDirectory",required = true)
+	public String getConnectionsDirectory() {
+		return connectionsDirectory;
 	}
 	
-    @XmlElement(name = "gtfsDirectory",required = true)
-	public String getGTFSDirectory() {
-		return this.gtfsDirectory;
+	public void setAirportsDirectory(String airportsDirectory) {
+		this.airportsDirectory = airportsDirectory;
 	}
-    
-    @XmlElement(name = "directConnections",required = true)
-   	public Boolean getDirectConnections() {
-   		return this.directConnections;
-   	}
-    
-    public void setGTFSDirectory(String gtfsDirectory) {
-    	this.gtfsDirectory = gtfsDirectory;
-    }
-    
-    public void setDirectConnections(Boolean directConnections) {
-    	this.directConnections = directConnections ;
-    }
 	
-	
-	@Override
-    public String toString() {
-        return "airConfig{" +
-                "gtfsDirectory='" + this.gtfsDirectory + "\n"+
-                "directConnections='" + this.directConnections + "\n"+
-                '}';
-    }
-	
-
+	public void setConnectionsDirectory(String connectionsDirectory) {
+		this.connectionsDirectory = connectionsDirectory;
+	}
 }

@@ -10,6 +10,7 @@ import config.Config;
 import controller.Controller;
 import core.graph.NodeGeoI;
 import core.graph.Activity.ActivityNode;
+import core.graph.air.AirNode;
 import core.graph.facility.osm.FacilityNode;
 import core.graph.geo.CityNode;
 import core.graph.population.StdAgentNodeImpl;
@@ -17,7 +18,10 @@ import core.graph.rail.gtfs.GTFS;
 import core.graph.rail.gtfs.RailNode;
 import core.graph.road.osm.RoadNode;
 import picocli.CommandLine;
+import projects.CTAP.attractiveness.normalized.DefaultAttractivenessModelImpl;
+import projects.CTAP.attractiveness.normalized.DefaultAttractivenessModelVarImpl;
 import projects.CTAP.graphElements.ActivityCityLink;
+import projects.CTAP.transport.DefaultCTAPTransportLinkFactory;
 
 public class ScenarioBuildingPipeline implements Callable<Integer> {
 	
@@ -48,59 +52,67 @@ public class ScenarioBuildingPipeline implements Callable<Integer> {
 		controller.run();
 		controller.emptyTempDirectory();
 		
-		System.out.print("Road \n");
 		//Road------------------------------------------------------------------
 		core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
 		
-		System.out.print("GTFS \n");
 		//insert GTFS-----------------------------------------------------------
 		GTFS gtfs = controller.getInjector().getInstance(GTFS.class);
 		core.graph.rail.Utils.deleteRailGTFS();
-		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2019-10-06");
+		core.graph.rail.Utils.insertRailGTFSintoNeo4J(gtfs,"2021-07-18");
 		
-		System.out.print("Cities \n");
+		//insert air network
+		core.graph.air.Utils.insertAirNetworkNeo4j();
+		
 		//insert cities---------------------------------------------------------
 		core.graph.geo.Utils.insertCitiesIntoNeo4JFromCsv(CityNode.class);
 		
-		System.out.print("Facilities 1 \n");
 		//create FacilityNodes from osm-----------------------------------------
 		core.graph.facility.osm.Utils.facilitiesIntoNeo4j(config);
 		
-		System.out.print("Facilities 2 \n");
 		//connect FacilityNodes with Cities-------------------------------------
 		Map<Class<? extends NodeGeoI>,String> facilityConnMap = new HashMap<>();
 		facilityConnMap.put(CityNode.class,"city_id");
 		core.graph.Utils.setShortestDistCrossLink(FacilityNode.class,"node_osm_id",facilityConnMap,3);
 		
-		System.out.print("Facilities 3 \n");
 		//create the CityFacStatNodes-------------------------------------------
 		core.graph.geo.Utils.addCityFacStatNode();
 		
-		System.out.print("Connections 1 \n");
+		//Connections between AirNetwork RoadNetwork/RailNetwork----------------
+		Map<Class<? extends NodeGeoI>,String> airConnMap = new HashMap<>();
+		airConnMap.put(RoadNode.class,"node_osm_id");
+		airConnMap.put(RailNode.class,"stop_id");
+		core.graph.Utils.setShortestDistCrossLink(AirNode.class,"airport_id",airConnMap,3);
+		
 		//Connections between RoadNetwork and RailNetwork-----------------------
 		Map<Class<? extends NodeGeoI>,String> railConnMap = new HashMap<>();
 		railConnMap.put(RoadNode.class,"node_osm_id");
-		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"id",railConnMap,2);
+		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap,2);
 		
-		System.out.print("Connections 2 \n");
 		//Connections between Cities and RoadNetwork/RailNetwork----------------
 		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
 		cityConnMap.put(RoadNode.class,"node_osm_id");
-		cityConnMap.put(RailNode.class, "id");
+		cityConnMap.put(RailNode.class, "stop_id");
 		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
 		
-		System.out.print("Activities \n");
 		//insert activities-----------------------------------------------------
 		core.graph.Activity.Utils.insertActivitiesFromCsv(ActivityNode.class);
 		core.graph.Activity.Utils.insertActivitiesLocFromCsv(ActivityCityLink.class);
 		
-		System.out.print("Population \n");
 		//insert population-----------------------------------------------------
 		core.graph.population.Utils.insertStdPopulationFromCsv(StdAgentNodeImpl.class);
 		
-		System.out.print("Attractiveness \n");
 		//insert attractiveness-------------------------------------------------
-		projects.CTAP.attractiveness.normalized.Utils.insertAttractivenessNormalizedIntoNeo4j();
+		projects.CTAP.attractiveness.normalized.Utils.insertAttractivenessNormalizedIntoNeo4j(
+				(DefaultAttractivenessModelImpl)Controller.getInjector().getInstance(DefaultAttractivenessModelImpl.class),
+				new DefaultAttractivenessModelVarImpl());
+		
+		//insert transport links------------------------------------------------
+		DefaultCTAPTransportLinkFactory ctapTranspFactory = new DefaultCTAPTransportLinkFactory();
+		ctapTranspFactory.insertCTAPTransportLinkFactory(config.getCtapModelConfig()
+				.getTransportConfig().getCtapTransportLinkConfig());
+		
+		//insert destinationProbLinks-------------------------------------------
+		projects.CTAP.activityLocationSequence.Utils.insertDestinationProbIntoNeo4j();
 		
 		return 1;
 	}

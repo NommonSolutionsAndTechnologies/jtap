@@ -1,6 +1,7 @@
 package projects.CTAP.attractiveness.normalized;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,8 @@ import core.graph.Activity.ActivityNode;
 import core.graph.geo.CityNode;
 import core.graph.population.StdAgentNodeImpl;
 import data.external.neo4j.Neo4jConnection;
+import projects.CTAP.attractiveness.AttractivenessModelI;
+import projects.CTAP.attractiveness.AttractivenessModelVariablesI;
 import projects.CTAP.graphElements.AttractivenessNormalizedLink;
 
 
@@ -32,11 +35,11 @@ public class Utils {
 	 * @param actp
 	 * @throws Exception
 	 */
-	public static void insertAttractivenessNormalizedIntoNeo4j() throws Exception {
+	public static void insertAttractivenessNormalizedIntoNeo4j(AttractivenessModelI attractivenessModel, AttractivenessModelVariablesI variables) throws Exception {
 		
 		Config config = Controller.getConfig();
 		AttractivenessNormalizedConfig anc = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig();
-		Model an = Controller.getInjector().getInstance(Model.class);
+		DefaultAttractivenessModelImpl an = (DefaultAttractivenessModelImpl)Controller.getInjector().getInstance(AttractivenessModelI.class);
 		
 		Integer popThreshold = config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsPopThreshold();
 		Integer initialTime = (int)anc.getInitialTime();
@@ -45,7 +48,7 @@ public class Utils {
 		
 		Integer intervals = (int) Math.ceil((finalTime-initialTime)/timeInterval);
 		//cities stat nodes
-		String query = "match (m:CityFacStatNode)-[r]-(n:CityNode) where n.population >= "+popThreshold+" return m";
+		String query = "match (m:CityFacStatNode)-[r]-(n:CityNode) where n.population >= "+popThreshold+" return m,n";
     	List<Record> cityFacStatNodeRecords = data.external.neo4j.Utils.runQuery(query,AccessMode.READ);
     	//agents
     	List<StdAgentNodeImpl> agents = data.external.neo4j.Utils.importNodes(StdAgentNodeImpl.class);
@@ -56,17 +59,18 @@ public class Utils {
     	for(StdAgentNodeImpl agentNode: agents) {
     		for(ActivityNode activityNode: activities) {
     			for(Record rec: cityFacStatNodeRecords) {
-    				Double[] variables = new Double[3];
     				Map<String,Object> cityStats = rec.values().get(0).asMap();
-    				maskMap(cityStats,variables);
+    				Long cityId = rec.values().get(1).get("city_id").asLong();
+    				List<Double> vars = variables.getVariables(cityStats);
+    				vars.add(0d);
 	        		for(int j = 0;j<intervals;j++) {
 	        			Double time = new Double(timeInterval*j);
-	        			variables[2] = time;
+	        			vars.set(vars.size()-1, time);
 	        			attractivenessList.add(new AttractivenessNormalizedLink(agentNode.getId(),
-	        					(String)cityStats.get("city"),
+	        					cityId,
 	        					activityNode.getActivityId(),
 	        					time,
-	        					an.getAttractiveness(variables,1,activityNode.getActivityName())));
+	        					attractivenessModel.getAttractiveness(vars.toArray(new Double[vars.size()]),1,activityNode.getActivityName())));
 	        		}
     			}
         	}
@@ -89,26 +93,89 @@ public class Utils {
     		Double max_ = normal_.get(actpl.getAgentId()).get(actpl.getActivityId());
     		actpl.setAttractiveness(actpl.getAttractiveness()/max_);
     	}
-    					
+    	
+    	//delete existent links
+    	deleteAttractivenessLinks();
+    	
     	//add the links into the database
-    	data.external.neo4j.Utils.insertLinks(attractivenessList,AttractivenessNormalizedLink.class,StdAgentNodeImpl.class,"agent_id",CityNode.class,"city");
+    	data.external.neo4j.Utils.insertLinks(attractivenessList,AttractivenessNormalizedLink.class,StdAgentNodeImpl.class,"agent_id",CityNode.class,"city_id");
     
 	}
+
 	
-	
-	
-	/**
-	 * @param map
-	 * @param variables
-	 */
-	public static void maskMap(Map<String,Object> map, Double[] variables){
-		variables[0] =((map.get("restaurant") == null? new Long(0): (Long)map.get("restaurant"))).doubleValue();
-		variables[1] = ((map.get("restaurant") == null? new Long(0): (Long)map.get("restaurant"))).doubleValue();
-		IntStream.range(0, variables.length).forEach(x -> {
-			if(variables[x] == null) {
-				variables[x] = 0d; 
-			}
-		});       
+	public static void insertAttractivenessNormalizedIntoNeo4jSpain(AttractivenessModelI attractivenessModel, AttractivenessModelVariablesI variables) throws Exception {
+		
+		Config config = Controller.getConfig();
+		AttractivenessNormalizedConfig anc = config.getCtapModelConfig().getAttractivenessModelConfig().getAttractivenessNormalizedConfig();
+		//DefaultAttractivenessModelImpl an = (DefaultAttractivenessModelImpl)Controller.getInjector().getInstance(AttractivenessModelI.class);
+
+		//SpainAttractivenessModelImpl an = (SpainAttractivenessModelImpl)Controller.getInjector().getInstance(AttractivenessModelI.class);
+
+		
+		//Integer popThreshold = config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsPopThreshold();
+		String destinationsFacilityIDs = config.getCtapModelConfig().getDatasetConfig().getNewDatasetParams().getDestinationsFacilityIDs();
+		List<Long> destinationsFacilityIDsList = Arrays.asList(destinationsFacilityIDs.split(",")).stream().map(s -> Long.parseLong(s.trim())).collect(Collectors.toList());
+		
+		Integer initialTime = (int)anc.getInitialTime();
+		Integer finalTime = (int)anc.getFinalTime();
+		Integer timeInterval = (int)anc.getIntervalTime();
+		
+		Integer intervals = (int) Math.ceil((finalTime-initialTime)/timeInterval);
+		//cities stat nodes
+		//String query = "match (m:CityFacStatNode)-[r]-(n:CityNode) where n.population >= "+popThreshold+" return m,n";
+		String query = "match (m:CityFacStatNode)-[r]-(n:CityNode) where n.city_id in "+destinationsFacilityIDsList+" return m,n";
+    	List<Record> cityFacStatNodeRecords = data.external.neo4j.Utils.runQuery(query,AccessMode.READ);
+    	//agents
+    	List<StdAgentNodeImpl> agents = data.external.neo4j.Utils.importNodes(StdAgentNodeImpl.class);
+    	//activities
+    	List<ActivityNode> activities = data.external.neo4j.Utils.importNodes(ActivityNode.class);
+    	//calculate the attractivness for each agent-city-time
+    	List<AttractivenessNormalizedLink> attractivenessList = new ArrayList<>();
+    	for(StdAgentNodeImpl agentNode: agents) {
+    		for(ActivityNode activityNode: activities) {
+    			for(Record rec: cityFacStatNodeRecords) {
+    				Map<String,Object> cityStats = rec.values().get(0).asMap();
+    				Long cityId = rec.values().get(1).get("city_id").asLong();
+    				List<Double> vars = variables.getVariables(cityStats);
+    				vars.add(0d);
+	        		for(int j = 0;j<intervals;j++) {
+	        			Double time = new Double(timeInterval*j);
+	        			vars.set(vars.size()-1, time);
+	        			attractivenessList.add(new AttractivenessNormalizedLink(agentNode.getId(),
+	        					cityId,
+	        					activityNode.getActivityId(),
+	        					time,
+	        					attractivenessModel.getAttractiveness(vars.toArray(new Double[vars.size()]),1,activityNode.getActivityName()))); // just for test agent=1
+	        		}
+    			}
+        	}
+    	}
+    	
+    	
+    	//normalization 
+    	Map<Long, Map<Long, Optional<AttractivenessNormalizedLink>>> normal = attractivenessList.stream()
+    			.collect(Collectors.groupingBy(AttractivenessNormalizedLink::getAgentId,
+    			Collectors.groupingBy(AttractivenessNormalizedLink::getActivityId, Collectors.maxBy(Comparator.comparing(AttractivenessNormalizedLink::getAttractiveness)))));
+    	
+    	Map<Long, Map<Long, Double>> normal_ = new HashMap<>();
+    	for( Map.Entry<Long, Map<Long, Optional<AttractivenessNormalizedLink>>> entry : normal.entrySet() ) {
+    		normal_.put(entry.getKey(),new HashMap<Long, Double>());
+    		for(Map.Entry<Long, Optional<AttractivenessNormalizedLink>> entry_1 : entry.getValue().entrySet()) {
+    			normal_.get(entry.getKey()).put(entry_1.getKey(),entry_1.getValue().orElseThrow(() -> new RuntimeException("Missing max AttractivenessCTAPLink")).getAttractiveness());
+    		}
+    	}
+    			
+    	for(AttractivenessNormalizedLink actpl : attractivenessList) {
+    		Double max_ = normal_.get(actpl.getAgentId()).get(actpl.getActivityId());
+    		actpl.setAttractiveness(actpl.getAttractiveness()/max_);
+    	}
+    	
+    	//delete existent links
+    	deleteAttractivenessLinks();
+    	
+    	//add the links into the database
+    	data.external.neo4j.Utils.insertLinks(attractivenessList,AttractivenessNormalizedLink.class,StdAgentNodeImpl.class,"agent_id",CityNode.class,"city_id");
+    
 	}
 	
 	/**

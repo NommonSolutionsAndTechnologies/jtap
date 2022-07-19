@@ -9,6 +9,8 @@ public class CtapModelConfig {
 	private AttractivenessModelConfig attractivenessModelConfig;
 	private DatasetConfig datasetConfig;
 	private CtapPopulationConfig ctapPopulationConfig; 
+	private TransportConfig transportConfig;
+	private CtapActivityLocationConfig ctapActivityLocationConfig;
     
     @XmlElement(name = "attractivenessModelConfig",required = true)
 	public AttractivenessModelConfig getAttractivenessModelConfig() {
@@ -33,5 +35,23 @@ public class CtapModelConfig {
 	}
     public void setCtapPopulationConfig(CtapPopulationConfig ctapPopulationConfig) {
 		this.ctapPopulationConfig = ctapPopulationConfig;
+	}
+    
+    @XmlElement(name = "transportConfig",required = true)
+    public TransportConfig getTransportConfig() {
+		return transportConfig;
+	}
+    
+    public void setTransportConfig(TransportConfig transportConfig) {
+		this.transportConfig = transportConfig;
+	}
+    
+    @XmlElement(name = "ctapActivityLocationConfig",required = true)
+    public CtapActivityLocationConfig getCtapActivityLocationConfig() {
+		return ctapActivityLocationConfig;
+	}
+    
+    public void setCtapActivityLocationConfig(CtapActivityLocationConfig ctapActivityLocationConfig) {
+		this.ctapActivityLocationConfig = ctapActivityLocationConfig;
 	}
 }

@@ -24,9 +24,11 @@ import core.graph.NodeI;
 import core.graph.annotations.GraphElementAnnotation.Neo4JLinkElement;
 import core.graph.annotations.GraphElementAnnotation.Neo4JNodeElement;
 import core.graph.annotations.GraphElementAnnotation.Neo4JPropertyElement;
+import core.graph.geo.CityNode;
 import core.graph.rail.RailLink;
 import data.utils.io.CSV;
 import data.utils.io.OS;
+import projects.CTAP.graphElements.DestinationProbLink;
 
 /**
  * @author stefanopenazzi
@@ -172,6 +174,18 @@ public class Utils {
 		
 		return res;
 	}
+	
+	public static  String getLoadCSVLinkQuery(String file, Class<? extends LinkI> linkElement, String fromId, String toId) throws Exception {
+		if(!linkElement.isAnnotationPresent(Neo4JLinkElement.class)) {
+			throw new Exception(linkElement.getName() +" is not annotated with Neo4JLinkElement");
+		}
+		String res = "USING PERIODIC COMMIT 1000 LOAD CSV WITH HEADERS FROM \"file:///"+file+"\" AS "+CSVLINE +
+				" MATCH (sf) WHERE ID(sf) = toInteger("+CSVLINE+"."+fromId+")"+
+				" MATCH (st) WHERE ID(st) = toInteger("+CSVLINE+"."+toId+")"+
+				" "+
+		getCSVLinkString(linkElement,"sf","st");
+		return res;
+	}
     
     /**
      * @param element
@@ -187,7 +201,7 @@ public class Utils {
 	              .collect(Collectors.toMap(field -> field.getAnnotation(Neo4JPropertyElement.class).key(),
 	            		  Function.identity()));
 		StringBuffer res = new StringBuffer();
-		res.append("CREATE ("+sf+")-[:"+element.getAnnotation(Neo4JLinkElement.class).label()+" {");
+		res.append(" CREATE ("+sf+")-[:"+element.getAnnotation(Neo4JLinkElement.class).label()+" {");
 		//Properties
 		Iterator it = elementFields.entrySet().iterator();
 	    while (it.hasNext()) {
@@ -224,6 +238,14 @@ public class Utils {
 	    }
 		//OS.delete(new File(tempDirectory+"/"+fileName));
     }
+    
+    public static <T extends NodeI> void insertNodes(String csvFile, Class<? extends NodeI> element) throws Exception {
+    	String database = Controller.getConfig().getNeo4JConfig().getDatabase();
+    	try( Neo4jConnection conn = new Neo4jConnection()){  
+			conn.query(database,data.external.neo4j.Utils.getLoadCSVNodeQuery(csvFile,element),AccessMode.WRITE );
+	    }
+    }
+   
     
     /**
      * @param <T>
@@ -274,6 +296,38 @@ public class Utils {
     	insertLinks(database,tempDirectory,links,linkElement,sfNodeElement,sfProperty,sfCsvProperty,stNodeElement,stProperty,stCsvProperty);
     }
     
+
+    public static <T extends LinkI> void insertLinks(List<T> links,Class<? extends LinkI> linkElement, String fromId,String toId) throws Exception {
+    	String database = Controller.getConfig().getNeo4JConfig().getDatabase();
+    	String tempDirectory = Controller.getConfig().getGeneralConfig().getTempDirectory();
+    	String sfCsvProperty = fromId;
+    	String stCsvProperty = toId;
+    	
+    	String fileName = null;
+    	if(links.size()==0) return;
+		if(links.get(0).getClass().isAnnotationPresent(Neo4JLinkElement.class)) {
+			fileName = links.get(0).getClass().getAnnotation(Neo4JLinkElement.class).label() +"_file.csv";
+		}
+		else {
+			throw new Exception("Only classes annotated with @Neo4JLinkElement can be converted in links");
+		}
+		CSV.writeTo(new File(tempDirectory+"/"+fileName),links);
+		try( Neo4jConnection conn = new Neo4jConnection()){  
+			conn.query(database,data.external.neo4j.Utils.getLoadCSVLinkQuery(tempDirectory+"/"+
+		fileName,linkElement,sfCsvProperty,stCsvProperty),AccessMode.WRITE );
+	    }
+		OS.delete(new File(tempDirectory+"/"+fileName));
+    	
+    }
+    
+    public static <T extends LinkI> void insertLinks(String csvFile,Class<? extends LinkI> linkElement, Class<? extends NodeI> sfNodeElement, String sfProperty, String sfCsvProperty,
+			Class<? extends NodeI> stNodeElement, String stProperty, String stCsvProperty) throws Exception {
+    	String database = Controller.getConfig().getNeo4JConfig().getDatabase();
+		try( Neo4jConnection conn = new Neo4jConnection()){  
+			conn.query(database,data.external.neo4j.Utils.getLoadCSVLinkQuery(csvFile,
+					linkElement,sfNodeElement,sfProperty,sfCsvProperty,stNodeElement,stProperty,stCsvProperty),AccessMode.WRITE );
+		}
+    }
     
     public static <T extends NodeI> List<T> importNodes(Neo4jConnection conn,String database,Class<T> nodeClass) throws Exception{
     	List<T> result = new ArrayList<>(); 
@@ -439,4 +493,23 @@ public class Utils {
 		String q = "DROP INDEX "+indexName+" IF EXISTS";
 		conn.query(database,q,AccessMode.WRITE);
 	}
+    
+    public static void deleteLinks(Class<? extends LinkI> linkElement) throws Exception {
+		Config config = Controller.getConfig(); 
+		String database = config.getNeo4JConfig().getDatabase();
+         try( Neo4jConnection conn = new Neo4jConnection()){  
+        	conn.query(database,"Call apoc.periodic.iterate(\"cypher runtime=slotted Match (n)-[r:"+ linkElement.getAnnotation(Neo4JLinkElement.class).label()+"]-(m) RETURN r limit 10000000\", \"delete r\",{batchSize:100000});",AccessMode.WRITE );
+         }
+	}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }

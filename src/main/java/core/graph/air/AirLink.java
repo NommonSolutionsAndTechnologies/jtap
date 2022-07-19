@@ -13,14 +13,14 @@ import core.graph.annotations.GraphElementAnnotation.Neo4JType;
 @Neo4JLinkElement(label="AirLink")
 public class AirLink implements LinkI{
 	
-	@CsvBindByName(column = "stop_from")
+	@CsvBindByName(column = "id_from")
 	@CsvBindByPosition(position = 0)
-	@Neo4JPropertyElement(key="from",type=Neo4JType.TOSTRING)
-	private String from;
-	@CsvBindByName(column = "stop_to")
+	@Neo4JPropertyElement(key="id_from",type=Neo4JType.TOINTEGER)
+	private Long idFrom;
+	@CsvBindByName(column = "id_to")
 	@CsvBindByPosition(position = 1)
-	@Neo4JPropertyElement(key="to",type=Neo4JType.TOSTRING)
-	private String to;
+	@Neo4JPropertyElement(key="id_to",type=Neo4JType.TOINTEGER)
+	private Long idTo;
 	@CsvBindByName(column = "avg_travel_time")
 	@CsvBindByPosition(position = 2)
 	@Neo4JPropertyElement(key="avg_travel_time",type=Neo4JType.TOFLOAT)
@@ -37,30 +37,27 @@ public class AirLink implements LinkI{
 	@CsvBindByPosition(position = 5)
 	@Neo4JPropertyElement(key="last_dep_time",type=Neo4JType.TOSTRING)
 	private LocalTime lastDepartureTime;
-	@CsvBindByName(column = "type")
-	@CsvBindByPosition(position = 6)
-	private String type;
+	
 	
 	public AirLink() {}
 	
-	public AirLink( String from,String to,Double avgTravelTime,
+	public AirLink( Long from,Long to,Double avgTravelTime,
 			Integer connectionsPerDay,LocalTime firstDepartureTime,
-			LocalTime lastDepartureTime,String type) {
-		this.from = from;
-		this.to = to;
+			LocalTime lastDepartureTime) {
+		this.idFrom = from;
+		this.idTo = to;
 		this.avgTravelTime = avgTravelTime;
 		this.connectionsPerDay = connectionsPerDay;
 		this.firstDepartureTime = firstDepartureTime;
 		this.lastDepartureTime = lastDepartureTime;
-		this.type = type;
 	}
 	
-	public String getFrom() {
-		return this.from;
+	public Long getIdFrom() {
+		return this.idFrom;
 	}
 	
-	public String getTo(){
-		return this.to; 
+	public Long getIdTo(){
+		return this.idTo;
 	}
 	
 	public Double getAvgTravelTime(){
@@ -78,9 +75,4 @@ public class AirLink implements LinkI{
 	public LocalTime getLastDepartureTime(){
 		return this.lastDepartureTime; 
 	}
-	
-	public String getType(){
-		return this.type; 
-	}
-
 }

@@ -1,65 +1,73 @@
 package core.solver;
 
 import org.apache.commons.math3.analysis.MultivariateFunction;
+import org.apache.commons.math3.optim.ConvergenceChecker;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.MaxIter;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.optim.SimpleBounds;
 import org.apache.commons.math3.optim.SimpleValueChecker;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math3.optim.nonlinear.scalar.MultivariateOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.NelderMeadSimplex;
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.SimplexOptimizer;
-
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
+import org.apache.commons.math3.random.MersenneTwister;
 import core.models.ModelI;
-import core.solver.NelderMeadTest.MultivariateFunctionTest1;
+import projects.CTAP.model.LowerBoundCTAP;
+import projects.CTAP.model.UpperBoundCTAP;
 
 public class SolverImpl implements SolverI {
 	
-	private NelderMeadSimplex optimizer;
- 	private SimpleValueChecker sc = new SimpleValueChecker(1e-10, 1e-10,100000);
-	private SimplexOptimizer so = new SimplexOptimizer(sc);
+	private MultivariateOptimizer optimizer;
 	private ModelI model;
-	private double[] initialGuess;
+	private double[] initialGuess = null;
 	
 	public static class Builder {
 		
 		private ModelI model;
-		private double[] initialGuess = null;
-		
-		
-		
+		private double[] initialGuess_ = null;
+	
 		public Builder(ModelI model) {
 			this.model = model;
 		}
 		
-		public Builder initialGuess(double[] initialGuess) {
-			this.initialGuess = initialGuess;
+		public Builder initialGuess(double[] initialGuess_) {
+			this.initialGuess_ = initialGuess_;
 			return this;
 		}
 		
 		public SolverImpl build() {
 			SolverImpl solver = new SolverImpl(this.model);
-			solver.initialGuess = this.initialGuess;
+			solver.initialGuess = this.initialGuess_;
 			return solver;
 		}
 	}
 	
 	public SolverImpl(ModelI model) {
 		this.model = model;
-		optimizer = new NelderMeadSimplex(model.getObjectiveFunction().getVariablesLength());
+		//optimizer = new NelderMeadSimplex(model.getObjectiveFunction().getVariablesLength());
+		ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(1.e-6, 1.e-14);
+        optimizer = new CMAESOptimizer(1000, 0.01, true, 0, 1, new MersenneTwister(), true,
+                convergenceChecker);
 	}
 	
-
 	@Override
-	public Object run() {
-		
-		//optimizer.build(startpoint);
-		org.apache.commons.math3.optim.PointValuePair pvp = so.optimize(optimizer, 
-				new ObjectiveFunction(new MultivariateFunctionSolver(this.model)),GoalType.MINIMIZE,new MaxIter(100000),new MaxEval(100000),
-				new InitialGuess(this.initialGuess)); //
-		System.out.print(""); 
-		
-		return null;
+	public PointValuePair run() {
+		org.apache.commons.math3.optim.PointValuePair pvp = null;
+		double[] lower = ((LowerBoundCTAP)this.model.getConstraints().get(0)).getConstraint();
+		double[] upper = ((UpperBoundCTAP)this.model.getConstraints().get(1)).getConstraint();
+		pvp = optimizer.optimize(
+				new ObjectiveFunction(new MultivariateFunctionSolver(this.model)),
+				GoalType.MINIMIZE,
+				new MaxIter(5000000),
+				MaxEval.unlimited(),
+				new InitialGuess(this.initialGuess),
+				new CMAESOptimizer.PopulationSize(3),
+				new SimpleBounds(lower, upper),
+				new CMAESOptimizer.Sigma(upper)
+				); //
+		return pvp;
 	}
 	
 	class MultivariateFunctionSolver implements MultivariateFunction{
@@ -74,5 +82,4 @@ public class SolverImpl implements SolverI {
 			return this.model.getObjectiveFunction().getValue(point);
 		}
 	}
-
 }

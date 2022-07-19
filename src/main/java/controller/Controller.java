@@ -47,9 +47,21 @@ public class Controller implements ControllerI {
 	
 	public static void emptyTempDirectory() {
 		File directory = new File(getInjector().getInstance(Config.class).getGeneralConfig().getTempDirectory());
+		File[] files = directory.listFiles();
+		for(File file : files) {
+			  file.delete();
+		}
+	}
+	public static void emptyOutputDirectory() {
+		File directory = new File(getInjector().getInstance(Config.class).getGeneralConfig().getOutputDirectory());
 		File[] files = directory.listFiles();    
 		for(File file : files) {
 		  file.delete();
 		}
+	}
+	
+	public final Controller addOverridingModule( AbstractModule abstractModule ) {
+		this.overrides = AbstractModule.override(Collections.singletonList(this.overrides), abstractModule);
+		return this ;
 	}
 }

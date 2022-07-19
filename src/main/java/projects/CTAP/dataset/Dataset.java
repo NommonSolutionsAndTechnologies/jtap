@@ -1,19 +1,6 @@
 package projects.CTAP.dataset;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-
 import core.dataset.DatasetI;
-import core.dataset.ModelElementI;
-import core.dataset.ParameterI;
 
 public final class Dataset implements DatasetI {
 	
@@ -37,6 +24,7 @@ public final class Dataset implements DatasetI {
 	private final ActivityLocationCostParameter activityLocationCostParameter ;
 	private final ValueOfTimeParameter valueOfTimeParameter;
 	private final AgentHomeLocationParameter agentHomeLocationParameter;
+	private final DestinationsProbDistParameter destinationsProbDistParameter;
 	
 	
 	
@@ -57,7 +45,8 @@ public final class Dataset implements DatasetI {
 	 //LocationPerceptionParameter  locationPerceptionParameter,
 	 ActivityLocationCostParameter activityLocationCostParameter,
 	 ValueOfTimeParameter valueOfTimeParameter,
-	 AgentHomeLocationParameter agentHomeLocationParameter) {
+	 AgentHomeLocationParameter agentHomeLocationParameter,
+	 DestinationsProbDistParameter destinationsProbDistParameter) {
 		
 		this.agentsIndex = agentsIndex ;
 		this.activitiesIndex = activitiesIndex;
@@ -77,6 +66,7 @@ public final class Dataset implements DatasetI {
 		this.activityLocationCostParameter = activityLocationCostParameter;
 		this.valueOfTimeParameter = valueOfTimeParameter;
 		this.agentHomeLocationParameter = agentHomeLocationParameter;
+		this.destinationsProbDistParameter = destinationsProbDistParameter;
 		
 	}
 	public ActivitiesIndex getActivitiesIndex() {
@@ -132,5 +122,8 @@ public final class Dataset implements DatasetI {
 	}
 	public AgentHomeLocationParameter getAgentHomeLocationParameter() {
 		return agentHomeLocationParameter;
+	}
+	public DestinationsProbDistParameter getDestinationsProbDistParameter() {
+		return destinationsProbDistParameter;
 	}
 }
