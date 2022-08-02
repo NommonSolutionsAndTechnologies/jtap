@@ -66,14 +66,24 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	
 	public double getValue(double[] ts, double[] te) {
 		double res = 0;
-		//res += getDiscomfortPercentageOfTimeTarget(ts, te);
-		res +=  10000 * getDiscomfortDurationTarget(ts, te);
-		//res += getDiscomfortBudget(ts, te);
+		res +=  200 * getDiscomfortPercentageOfTimeTarget(ts, te);
+		res +=  1.5 / 50 / 50 / 10 * getDiscomfortDurationTarget(ts, te) / 10;
+		res += getDiscomfortBudget(ts, te);
 		//res += getLagrangeMultipliers_1(ts, te);
 		//res += getLagrangeMultipliers_2(ts, te);
 		//res += getLagrangeMultipliers_3(ts, te);
 		//res += getLagrangeMultipliers_4(ts, te);
-		res += 100000 * getLagrangeMultipliers_5(ts, te);
+		res += 1 * getLagrangeMultipliers_5(ts, te);
+		
+//		System.out.print("Iter \n");
+//		System.out.print(getStateValue(0,ts,te));
+//		System.out.print(" \n");
+//		System.out.print(getStateValue(1,ts,te));
+//		System.out.print(" \n");
+//		System.out.print(getStateValue(2,ts,te));
+//		System.out.print(" \n");
+//		System.out.print(res);
+//		System.out.print(" \n");
 		
 		return res;
 	}
@@ -101,7 +111,11 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	private double getDiscomfortPercentageOfTimeTarget(double[] ts, double[] te) {
 		double res = 0;
 		for(int i = 0;i<percentageOfTimeTarget.length;i++) {
-			res += Math.pow(percentageOfTimeTarget[i] - getStateValue(i,ts,te),2);
+			for(int j = 1;j<ts.length+1;j++) {
+				double[] ts_subset = Arrays.copyOfRange(ts,0,j);
+				double[] te_subset = Arrays.copyOfRange(te,0,j);
+				res += Math.pow(percentageOfTimeTarget[i] - getStateValue(i,ts_subset,te_subset),2);
+			}
 		}
 		return res;
 	}
@@ -132,12 +146,16 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	
 	private double getDiscomfortBudget(double[] ts, double[] te) {
 		double res = 0;
-		for(int i =0;i<this.activities.length;i++ ) {
-			res += costActivityLocation(i,ts[i],te[i]);
-			res += travelCost[i];
+		for(int i =1;i<this.activities.length;i+=2 ) {
+			//res += costActivityLocation(i,ts[i],te[i]);
+			if(te[i]-ts[i] > 1 * 24) {
+				res += travelCost[i-1];
+				res += travelCost[i];
+			}
+			
 		}
 		res = Math.pow(res, 2)/Math.pow(monetaryBudget,2);
-		res += Math.pow(costOfTime(ts[0],te[te.length-1]), 2)/Math.pow(timeRelatedBudget, 2);
+		//res += Math.pow(costOfTime(ts[0],te[te.length-1]), 2)/Math.pow(timeRelatedBudget, 2);
 		return res;
 	}
 	
@@ -145,18 +163,26 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	    if(te < ts) {
 			return Math.abs(te-ts)*1000;
 		}
+	    if(te > 8736) {
+			return 1;
+		}
+	    
+	    if(te > 8760) {
+			return Math.abs(te-8760)*1000;
+		}
+	    
 		int ts_ = (int) Math.floor(ts / attractivenessTimeInterval);
 		int _te = (int) Math.ceil(te / attractivenessTimeInterval);
-		if(ts_ == _te) {
+		if(ts_ >= _te - 1) {
 			return locationPerception[i] *  attractiveness[i][ts_] ;     
 		}
 		else {
 			double res = 0;
-			for(int j = ts_+1;j < _te; j++) {
+			for(int j = ts_+1;j < _te - 1; j++) {
 				res += attractivenessTimeInterval*(attractiveness[i][j]);
 			}
 			res += attractiveness[i][ts_] * ((ts_+1)*attractivenessTimeInterval-ts);
-			res += attractiveness[i][_te] * (te - attractivenessTimeInterval*(_te-1));
+			res += attractiveness[i][_te - 1] * (te - attractivenessTimeInterval*(_te-1));
 			return locationPerception[i] * res / (te-ts)  ;     
 		}                         
 	}
@@ -174,19 +200,23 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	}
 	
 	private double getStateValue(int activity,double[] ts, double[] te) {
-		double res = 0;
-		for(int i =0;i<this.activities.length;i++ ) {
+		double res = percentageOfTimeTarget[activity];
+		for(int i =0;i<ts.length;i++ ) {
 			if(activities[i] == activity) {
 				if(activity == 0) {
-					res = 1 + (res-1) * Math.pow(Math.E, -tauActivityCalibration[i]*(te[i]-ts[i])* 1); 
+					res = 1 + (res-1) * Math.pow(Math.E, -tauActivityCalibration[activity]*(te[i]-ts[i])* 1); 
 				}
 				else {
-					res = 1 + (res-1) * Math.pow(Math.E, -tauActivityCalibration[i]*(te[i]-ts[i])* getPullFactor(i,ts[i], te[i])); 
+					if(te[i]-ts[i] >= 1 * 24) {
+						res = 1 + (res-1) * Math.pow(Math.E, -tauActivityCalibration[activity]*(te[i]-ts[i])* getPullFactor(i,ts[i], te[i]));						
+					}
+					
+					 //res = 1 + (res-1) * Math.pow(Math.E, -tauActivityCalibration[activity]*(te[i]-ts[i])* 1); 
 				}
 				
 			}
 			else {
-				res = res * Math.pow(Math.E, -sigmaActivityCalibration[i]*(te[i]-ts[i])); 
+				res = res * Math.pow(Math.E, -sigmaActivityCalibration[activity]*(te[i]-ts[i])); 
 			}
 		}
 		return res;

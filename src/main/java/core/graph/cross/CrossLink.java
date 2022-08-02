@@ -15,10 +15,22 @@ public class CrossLink implements LinkI {
 	@CsvBindByPosition(position = 0)
 	@Neo4JPropertyElement(key="from",type=Neo4JType.TOSTRING)
 	private String from;
+	
+	@CsvBindByName(column = "from_node_type")
+	@CsvBindByPosition(position = 1)
+	@Neo4JPropertyElement(key="from_node_type",type=Neo4JType.TOSTRING)
+	private String from_node_type;
+	
 	@CsvBindByName(column = "to")
 	@CsvBindByPosition(position = 1)
 	@Neo4JPropertyElement(key="to",type=Neo4JType.TOSTRING)
 	private String to;
+	
+	@CsvBindByName(column = "to_node_type")
+	@CsvBindByPosition(position = 3)
+	@Neo4JPropertyElement(key="to_node_type",type=Neo4JType.TOSTRING)
+	private String to_node_type;
+	
 	@CsvBindByName(column = "distance")
 	@CsvBindByPosition(position = 2)
 	@Neo4JPropertyElement(key="distance",type=Neo4JType.TOINTEGER)
@@ -31,9 +43,11 @@ public class CrossLink implements LinkI {
 	
 	public CrossLink() {}
 	
-	public CrossLink( String from,String to,Integer distance,Integer avgTravelTime) {
+	public CrossLink( String from, String from_node_type, String to, String to_node_type, Integer distance,Integer avgTravelTime) {
 		this.from = from;
+		this.from_node_type = from_node_type;
 		this.to = to;
+		this.to_node_type = to_node_type;
 		this.distance = distance;
 		this.avgTravelTime = avgTravelTime;
 	}
@@ -42,8 +56,16 @@ public class CrossLink implements LinkI {
 		return this.from;
 	}
 	
+	public String getFromNodeType() {
+		return this.from_node_type;
+	}
+	
 	public String getTo(){
 		return this.to; 
+	}
+	
+	public String getToNodeType(){
+		return this.to_node_type; 
 	}
 	
 	public Integer getDistance(){

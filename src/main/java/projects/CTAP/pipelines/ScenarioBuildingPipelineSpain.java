@@ -82,7 +82,7 @@ public class ScenarioBuildingPipelineSpain implements Callable<Integer> {
 		//connect FacilityNodes with Cities-------------------------------------
 		Map<Class<? extends NodeGeoI>,String> facilityConnMap = new HashMap<>();
 		facilityConnMap.put(CityNode.class,"city_id");
-		core.graph.Utils.setShortestDistCrossLink(FacilityNode.class,"node_osm_id",facilityConnMap,3);
+		//core.graph.Utils.setShortestDistCrossLink(FacilityNode.class,"node_osm_id",facilityConnMap,3);
 		
 		System.out.print("Facilities 3 \n");
 		//create the CityFacStatNodes-------------------------------------------
@@ -96,20 +96,20 @@ public class ScenarioBuildingPipelineSpain implements Callable<Integer> {
 		///////////////////////////////////////
 		//airConnMap.put(CityNode.class,"city_id");
 		//////////////////////////////////////
-		core.graph.Utils.setShortestDistCrossLink(AirNode.class,"airport_id",airConnMap,3);
+		//core.graph.Utils.setShortestDistCrossLink(AirNode.class,"airport_id",airConnMap,3);
 		
 		System.out.print("Connections 1 \n");
 		//Connections between RoadNetwork and RailNetwork-----------------------
 		Map<Class<? extends NodeGeoI>,String> railConnMap = new HashMap<>();
 		railConnMap.put(RoadNode.class,"node_osm_id");
-		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap,2);
+		//core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap,2);
 		
 		//////////////////////////////
 		System.out.print("Connections 1-2 \n");
 		//Connections between RailNetwork and Cities-----------------------
 		Map<Class<? extends NodeGeoI>,String> railConnMap_city = new HashMap<>();
 		railConnMap_city.put(CityNode.class,"city_id");
-		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap_city,3);
+		//core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap_city,3);
 		//////////////////////////////
 		
 		System.out.print("Connections 2 \n");
@@ -117,7 +117,7 @@ public class ScenarioBuildingPipelineSpain implements Callable<Integer> {
 		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
 		cityConnMap.put(RoadNode.class,"node_osm_id");
 		//cityConnMap.put(RailNode.class, "stop_id");
-		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
+		//core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
 		
 		System.out.print("Activities \n");
 		//insert activities-----------------------------------------------------

@@ -142,19 +142,43 @@ public class LinkTimeFlowSpain {
 				
 				for(int i = 0;i<bestPlan.getLocations().length-1;i++) {
 					List<Long> links = null;
+					
+					// mode_list = ['air-rail-road', 'rail-road', 'rail', 'road', 'air-rail', 'air-road', 'air']
+					
 					if(i%2 == 0) {
 						if(homeDs) {
 							/////
-							double cost0 = dataset.getDs2DsTravelCostParameter()
+							double cost_all = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost2 = dataset.getDs2DsTravelCostParameter()
+							double cost_rail = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost3 = dataset.getDs2DsTravelCostParameter()
+							cost_rail = cost_rail - 60;
+							
+							double cost_road = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost2, cost3);
+							double cost_air = dataset.getDs2DsTravelCostParameter()
+									.getParameter()[6][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							
+							String projection_str = modalSplitNew(lambda, cost_all, cost_rail, cost_road, cost_air);
+							System.out.println(projection_str);
+							
+							int projection = 0;
+							if(projection_str == "all") {
+								projection = 0;
+							}
+							else if(projection_str == "rail") {
+								projection = 2;
+								System.out.println("rail");
+							}
+							else if(projection_str == "road") {
+								projection = 3;
+							}
+							else if(projection_str == "air") {
+								projection = 6;
+							}
 							/////							
 							
 							links = dataset.getDs2DsPathParameter()
@@ -162,17 +186,39 @@ public class LinkTimeFlowSpain {
 						}
 						else {
 							/////
-							double cost0 = dataset.getOs2DsTravelCostParameter()
+							double cost_all = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost2 = dataset.getOs2DsTravelCostParameter()
+							double cost_rail = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost3 = dataset.getOs2DsTravelCostParameter()
+							cost_rail = cost_rail - 60;
+							
+							double cost_road = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost2, cost3);
+							double cost_air = dataset.getOs2DsTravelCostParameter()
+									.getParameter()[6][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							
+							String projection_str = modalSplitNew(lambda, cost_all, cost_rail, cost_road, cost_air);
+							System.out.println(projection_str);
+							
+							int projection = 0;
+							if(projection_str == "all") {
+								projection = 0;
+							}
+							else if(projection_str == "rail") {
+								projection = 2;
+								System.out.println("rail");
+							}
+							else if(projection_str == "road") {
+								projection = 3;
+							}
+							else if(projection_str == "air") {
+								projection = 6;
+							}
 							/////
+							
 							links = dataset.getOs2DsPathParameter()
                         			.getParameter()[projection][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 						}
@@ -181,16 +227,37 @@ public class LinkTimeFlowSpain {
                         if(homeDs) {
                         	
 							/////
-							double cost0 = dataset.getDs2DsTravelCostParameter()
+							double cost_all = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost2 = dataset.getDs2DsTravelCostParameter()
+							double cost_rail = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost3 = dataset.getDs2DsTravelCostParameter()
+							cost_rail = cost_rail - 60;
+							
+							double cost_road = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost2, cost3);
+							double cost_air = dataset.getDs2DsTravelCostParameter()
+									.getParameter()[6][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							
+							String projection_str = modalSplitNew(lambda, cost_all, cost_rail, cost_road, cost_air);
+							System.out.println(projection_str);
+							
+							int projection = 0;
+							if(projection_str == "all") {
+								projection = 0;
+							}
+							else if(projection_str == "rail") {
+								projection = 2;
+								System.out.println("rail");
+							}
+							else if(projection_str == "road") {
+								projection = 3;
+							}
+							else if(projection_str == "air") {
+								projection = 6;
+							}
 							/////
                    
                         	
@@ -198,18 +265,39 @@ public class LinkTimeFlowSpain {
                         			.getParameter()[projection][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 						}
 						else {
+							
 							/////
-							double cost0 = dataset.getDs2OsTravelCostParameter()
+							double cost_all = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[0][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost2 = dataset.getDs2OsTravelCostParameter()
+							double cost_rail = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							double cost3 = dataset.getDs2OsTravelCostParameter()
+							cost_rail = cost_rail - 60;
+							
+							double cost_road = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							int projection = modalSplit(lambda, cost0, cost2, cost3);
-							/////							
+							double cost_air = dataset.getDs2OsTravelCostParameter()
+									.getParameter()[6][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
+							
+							String projection_str = modalSplitNew(lambda, cost_all, cost_rail, cost_road, cost_air);
+							System.out.println(projection_str);
+							int projection = 0;
+							if(projection_str == "all") {
+								projection = 0;
+							}
+							else if(projection_str == "rail") {
+								projection = 2;
+								System.out.println("rail");
+							}
+							else if(projection_str == "road") {
+								projection = 3;
+							}
+							else if(projection_str == "air") {
+								projection = 6;
+							}
+							////							
 							
 							
 							links = dataset.getDs2OsPathParameter()
@@ -236,9 +324,173 @@ public class LinkTimeFlowSpain {
 		
 	}
 	
-	public static int modalSplit(double lambda, double cost0, double cost1, double cost2) {
-       
-        if(cost2 == -1) {
+	public static String modalSplitNew(double lambda, double cost_all, double cost_rail, double cost_road, double cost_air) {
+		List<Double> costAll = new ArrayList<>();
+		boolean air = false;
+		boolean road = false;
+		boolean rail = false;
+		boolean all = false;
+		if( cost_air > -1) {
+			costAll.add(cost_air / cost_all);
+			air = true;
+		}
+		
+		if( cost_road > -1) {
+			costAll.add(cost_road / cost_all);
+			road = true;
+		}
+		if( cost_rail > -1) {
+			costAll.add(cost_rail / cost_all);
+			rail = true;
+		}
+		
+		if( cost_all == cost_rail || cost_all == cost_road || cost_all == cost_air) {
+		}
+		else {
+			costAll.add(cost_all / cost_all);
+			all = true;
+		}
+		double prob0 = 0;
+		double prob1 = 0;
+		double prob2 = 0;
+		double prob3 = 0;
+		
+		if(air) {
+			prob0 = logitModel(lambda, cost_air / cost_all, costAll);
+		}
+		else {
+			prob0 = 0;
+		}
+		
+		if(road) {
+			prob1 = logitModel(lambda, cost_road / cost_all, costAll) + prob0;
+		}
+		else {
+			prob1 = prob0;
+		}
+		
+		if(rail) {
+			prob2 = logitModel(lambda, cost_rail / cost_all, costAll) + prob1;
+		}
+		else {
+			prob2 = prob1;
+		}
+		
+		if(all) {
+			prob3 = logitModel(lambda, cost_all / cost_all, costAll) + prob2;
+		}
+		else {
+			prob3 = prob2;
+		}
+		
+		double rr = Math.random();
+		
+		if(rr < prob0) {
+        	return "air";
+        }
+		else if (rr < prob1) {
+			return "road";
+		}
+		else if (rr < prob2) {
+			return "rail";
+		}
+		else {
+			return "all";
+		}
+		
+	}
+	
+	public static String modalSplit(double lambda, double cost_all, double cost_rail, double cost_road, double cost_air) {
+		if(cost_air == -1) {
+			int projection = modalSplit3(lambda, cost_all, cost_rail, cost_road);
+			if(projection == 2) {
+				return "road";
+			}
+			else if(projection == 1) {
+				return "rail";
+			}
+			else {
+				return "all";
+			}
+			
+		}
+		else if(cost_road == -1) {
+			int projection = modalSplit3(lambda, cost_all, cost_rail, cost_air);
+			if(projection == 2) {
+				return "air";
+			}
+			else if(projection == 1) {
+				return "rail";
+			}
+			else {
+				return "all";
+			}
+			
+		}
+		else if(cost_rail == -1) {
+			int projection = modalSplit3(lambda, cost_all, cost_road, cost_air);
+			if(projection == 2) {
+				return "air";
+			}
+			else if(projection == 1) {
+				return "road";
+			}
+			else {
+				return "all";
+			}
+			
+		}
+		else if(cost_all == cost_air || cost_all == cost_rail || cost_all == cost_road) {
+			int projection = modalSplit3(lambda, cost_rail, cost_road, cost_air);
+			if(projection == 2) {
+				return "air";
+			}
+			else if(projection == 1) {
+				return "road";
+			}
+			else {
+				return "rail";
+			}
+		}
+		
+		else {
+			List<Double> costAll = new ArrayList<>(){
+	            {
+	                add(cost_all / cost_all);
+	                add(cost_rail / cost_all);
+	                add(cost_road / cost_all);
+	                add(cost_air / cost_all);
+	            }
+	        };
+	        
+	        double prob0 = logitModel(lambda, cost_all / cost_all, costAll);
+	        double prob1 = logitModel(lambda, cost_rail / cost_all, costAll) + prob0;
+	        double prob2 = logitModel(lambda, cost_road / cost_all, costAll) + prob0 + prob1;
+	        double rr = Math.random();
+	        
+	        if(rr < prob0) {
+	        	return "all";
+	        }
+	        else {
+	        	if(rr < prob1) {
+	        		return "rail";
+	        	}
+	        	else {
+	        		if(rr < prob2) {
+		        		return "road";
+		        	}
+		        	else {
+		        		return "air";
+		        	}
+	        	}
+	        }
+			
+		}
+		
+	}
+		
+	public static int modalSplit3(double lambda, double cost0, double cost1, double cost2) {
+		if(cost2 == -1) {
         	if(cost1 == -1) {
         		return 0;
         	}
@@ -261,7 +513,7 @@ public class LinkTimeFlowSpain {
         	        	return 0;
         	        }
         	        else {
-        	        	return 2;
+        	        	return 1;
         	        }
         	        		
         			
@@ -269,83 +521,96 @@ public class LinkTimeFlowSpain {
         	}
         	
         }
-        else {
-        	if(cost2 == cost1) {
-        		if(cost0 == cost1) {
-        			return 0;
-        		}
-        		else {
-        			List<Double> costAll = new ArrayList<>(){
-        	            {
-        	                add(cost0 / cost1);
-        	                add(cost1 / cost1);
-        	            }
-        	        };
-        	        
-        	        double prob0 = logitModel(lambda, cost0 / cost1, costAll);
-        	        double rr = Math.random();
-        	        
-        	        if(rr < prob0) {
-        	        	return 0;
-        	        }
-        	        else {
-        	        	return 2;
-        	        }
-        			
-        		}
-        		
-        	}
-        	else {
-        		if(cost0 == cost1) {
-        			List<Double> costAll = new ArrayList<>(){
-        	            {
-        	                add(cost0 / cost2);
-        	                add(cost2 / cost2);
-        	            }
-        	        };
-        	        
-        	        double prob0 = logitModel(lambda, cost0 / cost2, costAll);
-        	        double rr = Math.random();
-        	        
-        	        if(rr < prob0) {
-        	        	return 0;
-        	        }
-        	        else {
-        	        	return 3;
-        	        }
-        		}
-        		else {
-        			List<Double> costAll = new ArrayList<>(){
-        	            {
-        	                add(cost0 / cost2);
-        	                add(cost1 / cost2);
-        	                add(cost2 / cost2);
-        	            }
-        	        };
-        	        
-        	        double prob0 = logitModel(lambda, cost0 / cost2, costAll);
-        	        double prob1 = logitModel(lambda, cost0 / cost2, costAll) + prob0;
-        	        double rr = Math.random();
-        	        
-        	        if(rr < prob0) {
-        	        	return 0;
-        	        }
-        	        else {
-        	        	if(rr < prob1) {
-        	        		return 2;
-        	        	}
-        	        	else {
-        	        		return 3;
-        	        	}
-        	        }
-        			
-        		}
-        		
-        	}
-        	
-        	
-        }
+		else if(cost1 == -1) {
+			if(cost2 == cost0) {
+				return 0;
+			}
+			else {
+				List<Double> costAll = new ArrayList<>(){
+    	            {
+    	                add(cost0 / cost2);
+    	                add(cost2 / cost2);
+    	            }
+    	        };
+    	        
+    	        double prob0 = logitModel(lambda, cost0 / cost2, costAll);
+    	        double rr = Math.random();
+    	        
+    	        if(rr < prob0) {
+    	        	return 0;
+    	        }
+    	        else {
+    	        	return 2;
+    	        }
 				
+			}
+			
+		}
+		else {
+			if(cost0 == cost1) {
+				List<Double> costAll = new ArrayList<>(){
+    	            {
+    	                add(cost0 / cost2);
+    	                add(cost2 / cost2);
+    	            }
+    	        };
+    	        
+    	        double prob0 = logitModel(lambda, cost0 / cost2, costAll);
+    	        double rr = Math.random();
+    	        
+    	        if(rr < prob0) {
+    	        	return 0;
+    	        }
+    	        else {
+    	        	return 2;
+    	        }
+				
+			}
+			else if(cost0 == cost2) {
+				List<Double> costAll = new ArrayList<>(){
+    	            {
+    	                add(cost0 / cost1);
+    	                add(cost1 / cost1);
+    	            }
+    	        };
+    	        
+    	        double prob0 = logitModel(lambda, cost0 / cost1, costAll);
+    	        double rr = Math.random();
+    	        
+    	        if(rr < prob0) {
+    	        	return 0;
+    	        }
+    	        else {
+    	        	return 1;
+    	        }
+			}
+			else {
+				List<Double> costAll = new ArrayList<>(){
+    	            {
+    	                add(cost0 / cost2);
+    	                add(cost1 / cost2);
+    	                add(cost2 / cost2);
+    	            }
+    	        };
+    	        
+    	        double prob0 = logitModel(lambda, cost0 / cost2, costAll);
+    	        double prob1 = logitModel(lambda, cost0 / cost2, costAll) + prob0;
+    	        double rr = Math.random();
+    	        
+    	        if(rr < prob0) {
+    	        	return 0;
+    	        }
+    	        else {
+    	        	if(rr < prob1) {
+    	        		return 1;
+    	        	}
+    	        	else {
+    	        		return 2;
+    	        	}
+    	        }
+				
+			}
+		}	
 		
 	}
 	

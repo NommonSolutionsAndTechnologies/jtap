@@ -60,7 +60,7 @@ public class ScenarioBuildingPipelineSpain_1 implements Callable<Integer> {
 		
 		System.out.print("Road \n");
 		//Road------------------------------------------------------------------
-		//core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
+		core.graph.road.osm.Utils.setOSMRoadNetworkIntoNeo4j();
 		
 		System.out.print("GTFS \n");
 		//insert GTFS-----------------------------------------------------------
@@ -90,36 +90,36 @@ public class ScenarioBuildingPipelineSpain_1 implements Callable<Integer> {
 		//create the CityFacStatNodes-------------------------------------------
 		core.graph.geo.Utils.addCityFacStatNodeSpain();
 		
-		System.out.print("Connections 0 \n");
-		//Connections between AirNetwork RoadNetwork/RailNetwork---------------- and Cities
-		Map<Class<? extends NodeGeoI>,String> airConnMap = new HashMap<>();
-		airConnMap.put(RoadNode.class,"node_osm_id");
-		//airConnMap.put(RailNode.class,"stop_id");
-		///////////////////////////////////////
-		airConnMap.put(CityNode.class,"city_id");
-		//////////////////////////////////////
-		core.graph.Utils.setShortestDistCrossLink(AirNode.class,"airport_id",airConnMap,3);
+		System.out.print("Connections Air \n");
+		//Connections between AIR Network and RAIL Network---------------- Spain model: Air and Rail not connected
+//		Map<Class<? extends NodeGeoI>,String> airRailConnMap = new HashMap<>();
+//		airRailConnMap.put(RailNode.class,"stop_id");
+//		core.graph.Utils.setShortestDistCrossLinkAirRail(AirNode.class,"airport_id",airRailConnMap,3);
+		
+		//Connections between AIR Network and ROAD Network----------------
+		Map<Class<? extends NodeGeoI>,String> airRoadConnMap = new HashMap<>();
+		airRoadConnMap.put(RoadNode.class,"node_osm_id");
+		core.graph.Utils.setShortestDistCrossLinkAirRoad(AirNode.class,"airport_id",airRoadConnMap,3);
 		
 		System.out.print("Connections 1 \n");
 		//Connections between RoadNetwork and RailNetwork-----------------------
-		Map<Class<? extends NodeGeoI>,String> railConnMap = new HashMap<>();
-		railConnMap.put(RoadNode.class,"node_osm_id");
-		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap,2);
+		Map<Class<? extends NodeGeoI>,String> railRoadConnMap = new HashMap<>();
+		railRoadConnMap.put(RoadNode.class,"node_osm_id");
+		core.graph.Utils.setShortestDistCrossLinkRailRoad(RailNode.class,"stop_id",railRoadConnMap,2);
 		
-		//////////////////////////////
+		
 		System.out.print("Connections 1-2 \n");
-		//Connections between RailNetwork and Cities-----------------------
-		Map<Class<? extends NodeGeoI>,String> railConnMap_city = new HashMap<>();
-		railConnMap_city.put(CityNode.class,"city_id");
-		core.graph.Utils.setShortestDistCrossLink(RailNode.class,"stop_id",railConnMap_city,3);
-		//////////////////////////////
-		
+		//Connections between Cities and RoadNetwork----------------
+		Map<Class<? extends NodeGeoI>,String> cityRoadConnMap = new HashMap<>();
+		cityRoadConnMap.put(RoadNode.class,"node_osm_id");
+		core.graph.Utils.setShortestDistCrossLinkCityRoad(CityNode.class,"city_id",cityRoadConnMap,3);
+				
 		System.out.print("Connections 2 \n");
-		//Connections between Cities and RoadNetwork/RailNetwork----------------
-		Map<Class<? extends NodeGeoI>,String> cityConnMap = new HashMap<>();
-		cityConnMap.put(RoadNode.class,"node_osm_id");
-		//cityConnMap.put(RailNode.class, "stop_id");
-		core.graph.Utils.setShortestDistCrossLink(CityNode.class,"city_id",cityConnMap,3);
+		//Connections between Cities and RailNetwork----------------
+		Map<Class<? extends NodeGeoI>,String> railCityConnMap = new HashMap<>();
+		railCityConnMap.put(CityNode.class,"city_id");
+		core.graph.Utils.setShortestDistCrossLinkRailCity(RailNode.class,"stop_id",railCityConnMap,3);
+		
 		
 		System.out.print("Activities \n");
 		//insert activities-----------------------------------------------------

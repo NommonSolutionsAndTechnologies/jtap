@@ -96,6 +96,8 @@ public class Solver {
 				for (ModelI model: agent.getAgentModels()) {
 					ObjectiveFunctionCTAP ofc = (ObjectiveFunctionCTAP) model.getObjectiveFunction();
 					
+//					System.out.print("New plan \n");
+					
 					SolverImpl si = new SolverImpl.Builder(model)
 								.initialGuess(model.getInitialGuess())
 								.build();

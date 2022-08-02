@@ -56,13 +56,22 @@ public class AgentFactory implements AgentFactoryI {
 			
 			//locations seq
 			double[] locationPerception = new double[nPlanActivities];
-			double[] sigmaActivityCalibration = new double[nPlanActivities];
-			double[] tauActivityCalibration = new double[nPlanActivities];
+			double[] sigmaActivityCalibration = new double[3];
+			double[] tauActivityCalibration = new double[3];
 			double[] gammaActivityCalibration = new double[nPlanActivities];
 			double[] travelCost = new double[nPlanActivities];
 			double[] travelTime = new double[nPlanActivities];
 			double[] activityLocationCostRate = new double[nPlanActivities];
 			float[][] attractiveness = new float[nPlanActivities][dataset.getTimeIndex().getIndex().size()];
+			
+			sigmaActivityCalibration[0] = 0.008 * 1 / 3 / 50 * 5;
+    		tauActivityCalibration[0] = 0.001 / 2 / 100 * 1.4 * 5;
+			
+			sigmaActivityCalibration[1] = 0.0018 / 10 / 1;
+    		tauActivityCalibration[1] = 0.04 / 15 / 2;
+
+			sigmaActivityCalibration[2] = 0.0004 / 10 / 4 * 10;
+    		tauActivityCalibration[2] = 0.006 / 6 / 2;
 			
 			//factory
             for(int i = 0;i< nPlanActivities ;i++) {
@@ -74,19 +83,22 @@ public class AgentFactory implements AgentFactoryI {
             	
             	//locationPerception[i] = this.dataset.getLocationPerceptionParameter().getParameter()[al[1][i]];
 				locationPerception[i] = 0.5 + Math.random() * (1.5 - 0.5);
-				if(actIndex == 0) {
-					sigmaActivityCalibration[i] = 0.0067;
-	    			tauActivityCalibration[i] = 0.002;
-				}
-				
-				if(actIndex == 1) {
-					sigmaActivityCalibration[i] = 0.002;
-	    			tauActivityCalibration[i] = 0.02;
-				}
-				else {
-					sigmaActivityCalibration[i] = 0.0004;
-	    			tauActivityCalibration[i] = 0.004;
-				}
+//				if(actIndex == 0) {
+//					sigmaActivityCalibration[i] = 0.008 * 1;
+//	    			tauActivityCalibration[i] = 0.001;
+//				}
+//				else {
+//					
+//				if(actIndex == 1) {
+//					sigmaActivityCalibration[i] = 0.0018 * 1;
+//	    			tauActivityCalibration[i] = 0.04;
+//				}
+//				else {
+//					sigmaActivityCalibration[i] = 0.0004 / 1;
+//	    			tauActivityCalibration[i] = 0.006 * 1;
+//				}
+//				
+//				}
 
     			//assuming first activity is always the default one
     			if(i%2==0 && i < nPlanActivities-1) {
@@ -142,7 +154,27 @@ public class AgentFactory implements AgentFactoryI {
 				}
 				
 			}
-			Arrays.fill(ub, 2400d);
+			
+			for(int i =0;i<initGuess.length;i++ ) {
+				if(al[0][i] == 0) {
+					initGuess[i] = 30 * 24;
+				}
+				else {
+					
+				
+				if(al[0][i] == 1) {
+					initGuess[i] = 2 * 24;
+				}
+				else {
+					initGuess[i] = 10 * 24;
+				}
+				
+				}
+				
+			}
+			
+			
+			Arrays.fill(ub, 1200d);
 			
 			models.add(new ModelCTAP(objF,constraints,initGuess));
 			

@@ -42,7 +42,13 @@ public class ProbDistEvenHomeActivityLocation implements ActivityLocationI {
 				ll[j] = 0;  //default activity
 			}
 			for(int j = 1;j<nPlanActivities;j+=2) {
-				ll[j] = rand.nextInt(dataset.getActivitiesIndex().getIndex().size()-1)+1;
+				// ll[j] = rand.nextInt(dataset.getActivitiesIndex().getIndex().size()-1)+1;
+				if(rand.nextInt(15) < 13) {
+					ll[j] = 1;
+				}
+				else {
+					ll[j] = 2;
+				}
 			}
 			activitiesPlan.add(ll);
 		}

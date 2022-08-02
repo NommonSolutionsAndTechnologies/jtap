@@ -48,7 +48,7 @@ public class SolverImpl implements SolverI {
 		this.model = model;
 		//optimizer = new NelderMeadSimplex(model.getObjectiveFunction().getVariablesLength());
 		ConvergenceChecker<PointValuePair> convergenceChecker = new SimpleValueChecker(1.e-6, 1.e-14);
-        optimizer = new CMAESOptimizer(1000, 0.01, true, 0, 1, new MersenneTwister(), true,
+        optimizer = new CMAESOptimizer(1000000, 0.01, true, 0, 1, new MersenneTwister(), true,
                 convergenceChecker);
 	}
 	
@@ -60,7 +60,7 @@ public class SolverImpl implements SolverI {
 		pvp = optimizer.optimize(
 				new ObjectiveFunction(new MultivariateFunctionSolver(this.model)),
 				GoalType.MINIMIZE,
-				new MaxIter(5000000),
+				new MaxIter(50000000),
 				MaxEval.unlimited(),
 				new InitialGuess(this.initialGuess),
 				new CMAESOptimizer.PopulationSize(3),
