@@ -130,7 +130,7 @@ public class LinkTimeFlowSpain {
 
 		@Override
 		public void run() {
-			double lambda = 1;
+			double lambda = 2;
 			for(Agent agent: this.agents) {
 				boolean homeDs = dataset.getCitiesDsIndex().getIndex().contains(agent.getLocationId());
 				Plan bestPlan = agent.getOptimalPlans().stream()
@@ -153,8 +153,6 @@ public class LinkTimeFlowSpain {
 							
 							double cost_rail = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
-							
-							cost_rail = cost_rail - 60;
 							
 							double cost_road = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
@@ -191,8 +189,6 @@ public class LinkTimeFlowSpain {
 							
 							double cost_rail = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
-							
-							cost_rail = cost_rail - 60;
 							
 							double cost_road = dataset.getOs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
@@ -233,8 +229,6 @@ public class LinkTimeFlowSpain {
 							double cost_rail = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
-							cost_rail = cost_rail - 60;
-							
 							double cost_road = dataset.getDs2DsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
 							
@@ -272,8 +266,6 @@ public class LinkTimeFlowSpain {
 							
 							double cost_rail = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[2][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
-							
-							cost_rail = cost_rail - 60;
 							
 							double cost_road = dataset.getDs2OsTravelCostParameter()
 									.getParameter()[3][bestPlan.getLocations()[i]][bestPlan.getLocations()[i+1]];
@@ -330,26 +322,44 @@ public class LinkTimeFlowSpain {
 		boolean road = false;
 		boolean rail = false;
 		boolean all = false;
-		if( cost_air > -1) {
-			costAll.add(cost_air / cost_all);
-			air = true;
-		}
-		
-		if( cost_road > -1) {
-			costAll.add(cost_road / cost_all);
-			road = true;
-		}
-		if( cost_rail > -1) {
-			costAll.add(cost_rail / cost_all);
-			rail = true;
-		}
 		
 		if( cost_all == cost_rail || cost_all == cost_road || cost_all == cost_air) {
 		}
 		else {
-			costAll.add(cost_all / cost_all);
+			cost_all = cost_all + (120 + 60) / 2;
 			all = true;
 		}
+		
+		if( cost_air > -1) {
+			cost_air = cost_air + 120;
+			air = true;
+		}
+		
+		if( cost_road > -1) {
+			cost_road = cost_road + 0;
+			road = true;
+		}
+		if( cost_rail > -1) {
+			cost_rail = cost_rail - 60 + 60;
+			rail = true;
+		}
+		
+		
+		if( air) {
+			costAll.add(cost_air / cost_all);
+		}
+		
+		if( road) {
+			costAll.add(cost_road / cost_all);
+		}
+		if( rail) {
+			costAll.add(cost_rail / cost_all);
+		}
+		
+		if( all) {
+			costAll.add(cost_all / cost_all);
+		}
+		
 		double prob0 = 0;
 		double prob1 = 0;
 		double prob2 = 0;

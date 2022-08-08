@@ -17,7 +17,7 @@ public class SpainCTAPTransportLinkFactory extends AbstractCTAPTransportLinkFact
 	//TODO get this to be airport-dependant. Currently we are applying the same transfer time information for ALL airports! The current values are for Madrid!! 
 	
 	//Switch between BEFORE and AFTER optimization
-	final private boolean beforeSchOpt = true;
+	final private boolean beforeSchOpt = false;
 	
 	//Air-Rail Coordination parameters
 	

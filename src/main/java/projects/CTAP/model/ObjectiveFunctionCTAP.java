@@ -67,7 +67,11 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 	public double getValue(double[] ts, double[] te) {
 		double res = 0;
 		res +=  200 * getDiscomfortPercentageOfTimeTarget(ts, te);
-		res +=  1.5 / 50 / 50 / 10 * getDiscomfortDurationTarget(ts, te) / 10;
+		//res +=  1.5 / 50 / 50 / 10 * getDiscomfortDurationTarget(ts, te) / 10;
+		
+		res +=  100 * getDiscomfortDurationTarget(ts, te);
+		
+		
 		res += getDiscomfortBudget(ts, te);
 		//res += getLagrangeMultipliers_1(ts, te);
 		//res += getLagrangeMultipliers_2(ts, te);
@@ -114,7 +118,7 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 			for(int j = 1;j<ts.length+1;j++) {
 				double[] ts_subset = Arrays.copyOfRange(ts,0,j);
 				double[] te_subset = Arrays.copyOfRange(te,0,j);
-				res += Math.pow(percentageOfTimeTarget[i] - getStateValue(i,ts_subset,te_subset),2);
+				res += Math.pow((percentageOfTimeTarget[i] - getStateValue(i,ts_subset,te_subset)) ,2);
 			}
 		}
 		return res;
@@ -129,14 +133,14 @@ public class ObjectiveFunctionCTAP implements ObjectiveFunctionI {
 				
 			}
 			else {
-				res_iter += Math.pow((timeDuration[i] - (te[i]-ts[i])),2);
+				res_iter += Math.pow(Math.abs(timeDuration[i] - (te[i]-ts[i])) / timeDuration[i]  ,4);
 			}
 			
 			if(activities[i] == 0) {
 				res_iter = res_iter*0;
 			}
 			else {
-				res_iter = res_iter * 1 / Math.pow(timeDuration[i],1);
+				res_iter = res_iter * 1; // Math.pow(timeDuration[i] ,2);
 			}
 			res += res_iter;
 			//res = res*1 / Math.pow(timeDuration[i],2);//this.durationDiscomfort[i];
